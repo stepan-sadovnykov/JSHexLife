@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svg" width="300px" height="300px">
+    </svg>
+<script>
+    var cellRadius = 15;
+    function createCell(field, x, y) {
+        var svgUri = "http://www.w3.org/2000/svg";
+        var item = document.createElementNS(svgUri, "rect");
+        var rectSide = cellRadius * 2 / Math.sqrt(2);
+        item.setAttributeNS(null, "width", rectSide + "px");
+        item.setAttributeNS(null, "height", rectSide + "px");
+        item.setAttributeNS(null, "x", (cellRadius * 2 * x + cellRadius - rectSide/2) + "px");
+        item.setAttributeNS(null, "y", (cellRadius * 2 * y + cellRadius - rectSide/2) + "px");
+        field.appendChild(item);
+    }
+
+    var svgField = document.getElementById("svg");
+    var height = window.innerHeight;
+    var width = window.innerWidth;
+    svgField.setAttribute("height", height + "px");
+    svgField.setAttribute("width", width + "px");
+    var cellsX = Math.floor(width / cellRadius / 2);
+    var cellsY = Math.floor(height / cellRadius / 2);
+    console.log(cellsX + "," + cellsY);
+    for (var x = 0; x < cellsX; x++)
+        for (var y = 0; y < cellsY; y++)
+            createCell(svgField, x, y);
+</script>
+</body>
+</html>
