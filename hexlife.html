@@ -10,6 +10,18 @@
             margin: 0;
             overflow: hidden;
         }
+        rect[state="false"] {
+            fill: darkgray;
+        }
+        rect[state="false"]:hover {
+            fill: lightgray;
+        }
+        rect[state="true"] {
+            fill: green;
+        }
+        rect[state="true"]:hover {
+            fill: lime;
+        }
     </style>
 </head>
 <body>
@@ -17,7 +29,7 @@
     </svg>
 <script>
     var cellRadius = 15;
-    function createCell(field, x, y) {
+    function createCellView(field, x, y) {
         var svgUri = "http://www.w3.org/2000/svg";
         var item = document.createElementNS(svgUri, "rect");
         var rectSide = cellRadius * 2 / Math.sqrt(2);
@@ -26,19 +38,79 @@
         item.setAttributeNS(null, "x", (cellRadius * 2 * x + cellRadius - rectSide/2) + "px");
         item.setAttributeNS(null, "y", (cellRadius * 2 * y + cellRadius - rectSide/2) + "px");
         field.appendChild(item);
+        return item;
     }
 
     var svgField = document.getElementById("svg");
     var height = window.innerHeight;
     var width = window.innerWidth;
-    svgField.setAttribute("height", height + "px");
-    svgField.setAttribute("width", width + "px");
     var cellsX = Math.floor(width / cellRadius / 2);
     var cellsY = Math.floor(height / cellRadius / 2);
-    console.log(cellsX + "," + cellsY);
-    for (var x = 0; x < cellsX; x++)
-        for (var y = 0; y < cellsY; y++)
-            createCell(svgField, x, y);
+
+    svgField.setAttribute("height", height + "px");
+    svgField.setAttribute("width", width + "px");
+    var grid = [];
+
+    function createCell() {
+        var cell = {};
+        cell.state = false;
+        cell.sum = Math.floor(Math.random() * 5);
+        cell.view = createCellView(svgField, x, y);
+        cell.neighbours = [];
+        cell.update = function () {
+            if (this.sum === undefined) {
+                this.sum = 0;
+                for (var neighbour of this.neighbours) {
+                    this.sum += neighbour.state;
+                }
+            } else {
+                //Conway's rules hardcoded for now
+                this.state = this.state ? (this.sum == 2 || this.sum == 3) : (this.sum == 3);
+                this.view.setAttribute("state", this.state);
+                this.sum = undefined;
+            }
+        };
+        return cell;
+    }
+
+    function mod (a, b) {
+        return ((a%b)+b)%b; 
+    }
+
+    function getNeighbours(grid, x, y) {
+        //Moore neighbourhood for square toroidal lattice for now
+        return [
+            grid[mod((x-1), cellsX)][mod((y-1), cellsY)],
+            grid[mod((x-1), cellsX)][mod((y), cellsY)],
+            grid[mod((x-1), cellsX)][mod((y+1), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y-1), cellsY)],
+//            grid[mod((x), cellsX)]  [mod((y), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y+1), cellsY)],
+            grid[mod((x+1), cellsX)][mod((y-1), cellsY)],
+            grid[mod((x+1), cellsX)][mod((y), cellsY)],
+            grid[mod((x+1), cellsX)][mod((y+1), cellsY)]
+                ]
+    }
+
+    var x, y;
+    for (x = 0; x < cellsX; x++) {
+        grid[x] = [];
+        for (y = 0; y < cellsY; y++) {
+            grid[x][y] = createCell();
+        }
+    }
+    for (x = 0; x < cellsX; x++) {
+        for (y = 0; y < cellsY; y++) {
+            grid[x][y].neighbours = getNeighbours(grid, x, y);
+        }
+    }
+    window.setInterval(function () {
+        for (x = 0; x < cellsX; x++) {
+            for (y = 0; y < cellsY; y++) {
+                grid[x][y].update.apply(grid[x][y]);
+            }
+        }
+    }, 100);
 </script>
 </body>
 </html>
