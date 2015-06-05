@@ -1,6 +1,14 @@
 "use strict";
 
 var cellDiameter = 20;
+var svgField;
+var height;
+var width;
+
+var cellsX;
+var cellsY;
+var grid = [];
+
 function createCellView(field, x, y) {
     var svgUri = "http://www.w3.org/2000/svg";
     var item = document.createElementNS(svgUri, "rect");
@@ -12,16 +20,6 @@ function createCellView(field, x, y) {
     field.appendChild(item);
     return item;
 }
-
-var svgField = document.getElementById("svg");
-var height = window.innerHeight;
-var width = window.innerWidth;
-var cellsX = Math.floor(width / cellDiameter);
-var cellsY = Math.floor(height / cellDiameter);
-
-svgField.setAttribute("height", height + "px");
-svgField.setAttribute("width", width + "px");
-var grid = [];
 
 function createCell(x, y) {
     var cell = {};
@@ -70,6 +68,7 @@ function initGrid() {
         }
     }
 }
+
 function initNeighbours() {
     var x, y;
     for (x = 0; x < cellsX; x++) {
@@ -78,7 +77,8 @@ function initNeighbours() {
         }
     }
 }
-function start() {
+
+function startTimer() {
     window.setInterval(function () {
         var x, y;
         for (x = 0; x < cellsX; x++) {
@@ -88,6 +88,19 @@ function start() {
         }
     }, 50);
 }
-initGrid();
-initNeighbours();
-start();
+
+function start(field, h, w) {
+    svgField = field;
+    height = h;
+    width = w;
+    cellsX = Math.floor(width / cellDiameter);
+    cellsY = Math.floor(height / cellDiameter);
+    svgField.setAttribute("height", height + "px");
+    svgField.setAttribute("width", width + "px");
+
+    initGrid();
+    initNeighbours();
+    startTimer();
+}
+
+start(document.getElementById("svg"), window.innerHeight, window.innerWidth);
