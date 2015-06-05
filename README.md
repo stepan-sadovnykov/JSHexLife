@@ -2,15 +2,16 @@
 Reimplementation of my old pet project in JS
 
 Implemented:
-- square toroidal lattice
+- hexagonal (square with a simple change of a constant) toroidal lattice
 - Moore neighbourhood (Chebyshev distance = 1)
 - Conway's rules
 
 Planned:
-- triangular and hexagonal lattices
+- triangular lattice
 - non-Conway rule configuration
 - click-editing
 - pausing
+- neighbourhoods taking into account non-suare lattices
 - Von Neumann neighbourhood (Manhattan distance = 1)
 - rule editing (neighbourhood and lattice selection)
 - rules with some randomness
