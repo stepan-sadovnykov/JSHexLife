@@ -1,22 +1,55 @@
 "use strict";
 
 var cellDiameter = 20;
+
 var svgField;
 var height;
 var width;
+var cellType;
 
 var cellsX;
 var cellsY;
+var cellSide;
+var effectiveCellHeight;
+var cellRadius;
 var grid = [];
+
+const CellTypes = {
+    RECT: 0,
+    HEX: 1,
+    TRIANGLE: 2
+};
 
 function createCellView(field, x, y) {
     var svgUri = "http://www.w3.org/2000/svg";
-    var item = document.createElementNS(svgUri, "rect");
-    var rectSide = cellDiameter / Math.sqrt(2);
-    item.setAttributeNS(null, "width", rectSide + "px");
-    item.setAttributeNS(null, "height", rectSide + "px");
-    item.setAttributeNS(null, "x", (cellDiameter * x + (cellDiameter - rectSide) / 2) + "px");
-    item.setAttributeNS(null, "y", (cellDiameter * y + (cellDiameter - rectSide) / 2) + "px");
+    var item;
+    switch (cellType) {
+        case CellTypes.RECT:
+            item = document.createElementNS(svgUri, "rect");
+            item.setAttributeNS(null, "width", cellSide + "px");
+            item.setAttributeNS(null, "height", cellSide + "px");
+            item.setAttributeNS(null, "x", (cellDiameter * x) + "px");
+            item.setAttributeNS(null, "y", (cellDiameter * y) + "px");
+            break;
+        case CellTypes.HEX:
+            item = document.createElementNS(svgUri, "polygon");
+            var effectiveX = (x + 0.5 * y) % cellsX;
+            var points = [
+                [cellRadius, 0],
+                [cellDiameter, cellSide / 2],
+                [cellDiameter, effectiveCellHeight],
+                [cellRadius, cellSide * 2],
+                [0, effectiveCellHeight],
+                [0, cellSide / 2]
+            ];
+            var path = "";
+            for (var point of points) {
+                path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " "
+            }
+
+            item.setAttributeNS(null, "points", path);
+            break;
+    }
     field.appendChild(item);
     return item;
 }
@@ -25,7 +58,7 @@ function createCell(x, y) {
     var cell = {};
     cell.state = false;
     cell.sum = Math.floor(Math.random() * 5);
-    cell.view = createCellView(svgField, x, y);
+    cell.view = createCellView(svgField, x, y, CellTypes.HEX);
     cell.neighbours = [];
     cell.update = function () {
         if (this.sum === undefined) {
@@ -89,12 +122,27 @@ function startTimer() {
     }, 50);
 }
 
-function start(field, h, w) {
+function start(field, h, w, type) {
     svgField = field;
     height = h;
     width = w;
-    cellsX = Math.floor(width / cellDiameter);
-    cellsY = Math.floor(height / cellDiameter);
+    cellType = type;
+
+    switch (cellType) {
+        case CellTypes.RECT:
+            cellSide = cellDiameter;
+            effectiveCellHeight = cellDiameter;
+            break;
+        case CellTypes.HEX:
+            cellRadius = cellDiameter / 2;
+            cellSide = cellRadius / Math.sin(Math.PI / 3);
+            effectiveCellHeight = (cellSide * 3 / 2);
+            break;
+    }
+
+    cellsX = Math.floor(width / cellDiameter) - 1;
+    cellsY = Math.floor(height / effectiveCellHeight) - 1;
+
     svgField.setAttribute("height", height + "px");
     svgField.setAttribute("width", width + "px");
 
@@ -103,4 +151,4 @@ function start(field, h, w) {
     startTimer();
 }
 
-start(document.getElementById("svg"), window.innerHeight, window.innerWidth);
+start(document.getElementById("svg"), window.innerHeight, window.innerWidth, CellTypes.HEX);
