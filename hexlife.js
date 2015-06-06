@@ -1,6 +1,6 @@
 "use strict";
 
-var cellDiameter = 20;
+var cellDiameter = 10;
 
 var svgField;
 var height;
@@ -13,6 +13,7 @@ var cellSide;
 var effectiveCellHeight;
 var cellRadius;
 var grid = [];
+var getNeighbourhood;
 
 const CellTypes = {
     RECT: 0,
@@ -44,7 +45,7 @@ function createCellView(field, x, y) {
             ];
             var path = "";
             for (var point of points) {
-                path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " "
+                path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
             }
 
             item.setAttributeNS(null, "points", path);
@@ -59,17 +60,21 @@ function createCell(x, y) {
     cell.state = false;
     cell.sum = Math.floor(Math.random() * 5);
     cell.view = createCellView(svgField, x, y, CellTypes.HEX);
+    cell.view.onclick = function() {
+        cell.state = !cell.state;
+        cell.view.setAttribute("state", cell.state);
+    };
     cell.neighbours = [];
     cell.update = function () {
-        if (this.sum === undefined) {
-            this.sum = 0;
-            for (var neighbour of this.neighbours) {
-                this.sum += neighbour.state;
+        if (cell.sum === undefined) {
+            cell.sum = 0;
+            for (var neighbour of cell.neighbours) {
+                cell.sum += neighbour.state;
             }
         } else {
-            this.state = this.state ? (this.sum == 2 || this.sum == 3) : (this.sum == 3);
-            this.view.setAttribute("state", this.state);
-            this.sum = undefined;
+            cell.state = cell.state ? (cell.sum == 2 || cell.sum == 3) : (cell.sum == 3);
+            cell.view.setAttribute("state", cell.state);
+            cell.sum = undefined;
         }
     };
     return cell;
@@ -81,14 +86,14 @@ function mod(a, b) {
 
 function getMooreNeighbours(grid, x, y) {
     return [
-        grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
+        //grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
         grid[mod((x - 1), cellsX)][mod((y), cellsY)],
         grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
         grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
         grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
         grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
+        grid[mod((x + 1), cellsX)][mod((y), cellsY)]//,
+        //grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
     ]
 }
 
@@ -116,7 +121,7 @@ function startTimer() {
         var x, y;
         for (x = 0; x < cellsX; x++) {
             for (y = 0; y < cellsY; y++) {
-                grid[x][y].update.apply(grid[x][y]);
+                grid[x][y].update();
             }
         }
     }, 50);
