@@ -1,6 +1,8 @@
 "use strict";
 
 var cellDiameter = 10;
+var density = .3;
+var generationDelay = 100;
 
 var svgField;
 var height;
@@ -57,23 +59,30 @@ function createCellView(field, x, y) {
 
 function createCell(x, y) {
     var cell = {};
-    cell.state = false;
-    cell.sum = Math.floor(Math.random() * 5);
+    cell.state = Math.random() < density;
+    cell.sum = undefined;
     cell.view = createCellView(svgField, x, y, CellTypes.HEX);
+    cell.neighbours = [];
+
     cell.view.onclick = function() {
         cell.state = !cell.state;
         cell.view.setAttribute("state", cell.state);
     };
-    cell.neighbours = [];
+    cell.updateSum = function () {
+        cell.sum = 0;
+        for (var neighbour of cell.neighbours) {
+            cell.sum += neighbour.state;
+        }
+    };
+    cell.updateState = function () {
+        cell.state = cell.state ? (cell.sum == 2 || cell.sum == 3) : (cell.sum == 3);
+        cell.view.setAttribute("state", cell.state);
+    };
     cell.update = function () {
         if (cell.sum === undefined) {
-            cell.sum = 0;
-            for (var neighbour of cell.neighbours) {
-                cell.sum += neighbour.state;
-            }
+            cell.updateSum();
         } else {
-            cell.state = cell.state ? (cell.sum == 2 || cell.sum == 3) : (cell.sum == 3);
-            cell.view.setAttribute("state", cell.state);
+            cell.updateState();
             cell.sum = undefined;
         }
     };
@@ -116,15 +125,29 @@ function initNeighbours() {
     }
 }
 
-function startTimer() {
-    window.setInterval(function () {
-        var x, y;
-        for (x = 0; x < cellsX; x++) {
-            for (y = 0; y < cellsY; y++) {
-                grid[x][y].update();
-            }
+var paused = false;
+function update() {
+    if (paused) return;
+    var x, y;
+    for (x = 0; x < cellsX; x++) {
+        for (y = 0; y < cellsY; y++) {
+            grid[x][y].updateSum();
         }
-    }, 50);
+    }
+    for (x = 0; x < cellsX; x++) {
+        for (y = 0; y < cellsY; y++) {
+            grid[x][y].updateState();
+        }
+    }
+}
+
+function startTimer() {
+    window.setInterval(update, generationDelay);
+    document.onkeypress = function(event) {
+        if (String.fromCharCode(event.charCode) == "p") {
+            paused = !paused;
+        }
+    }
 }
 
 function start(field, h, w, type) {
