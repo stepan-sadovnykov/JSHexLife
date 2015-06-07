@@ -22,10 +22,26 @@
         svg > *[state="true"]:hover {
             fill: lime;
         }
+        #menu {
+            position: absolute;
+            z-index: 10;
+            background: white;
+            top: 0;
+            left: 0;
+            padding: 2px;
+        }
+        #menu > * {
+            padding: 0 5px;
+        }
+        #menu > *:hover {
+            background: cornflowerblue;
+        }
     </style>
     <script src="hexlife.js"></script>
     <script>
+        var menuStyle;
         function onLoad() {
+            menuStyle = document.getElementById("menu").style;
             document.onkeypress = function(event) {
                 switch (String.fromCharCode(event.charCode)) {
                     case "p":
@@ -37,9 +53,14 @@
             };
             document.addEventListener("contextmenu", function(event) {
                 event.preventDefault();
-                console.log("menu!");
+                if (menuStyle.display == "none") {
+                    showMenu(event.clientX, event.clientY);
+                } else {
+                    hideMenu();
+                }
                 return false;
             });
+            document.onclick = function() {hideMenu();};
 
             var infoProvider = createEmptyInfoProvider();
             infoProvider.getHeight = function() {return window.innerHeight;};
@@ -47,10 +68,21 @@
             infoProvider.getCellType = function() {return CellTypes.HEX};
             start(document.getElementById("svg"), infoProvider);
         }
+        function showMenu(x, y) {
+            menuStyle.left = x + "px";
+            menuStyle.top = y + "px";
+            menuStyle.display = "block";
+        }
+        function hideMenu() {
+            menuStyle.display = "none";
+        }
     </script>
 </head>
 <body onload="onLoad();">
     <svg id="svg">
     </svg>
+    <div id="menu" style="display: none;">
+        <div onclick="restart(); hideMenu();">Restart</div>
+    </div>
 </body>
 </html>
