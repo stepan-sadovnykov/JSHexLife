@@ -5,6 +5,8 @@ var density = .3;
 var generationDelay = 100;
 
 var svgField;
+var _infoProvider;
+
 var height;
 var width;
 var cellType;
@@ -16,6 +18,7 @@ var effectiveCellHeight;
 var cellRadius;
 var grid = [];
 var getNeighbourhood;
+var timer;
 
 const CellTypes = {
     RECT: 0,
@@ -142,19 +145,59 @@ function update() {
 }
 
 function startTimer() {
-    window.setInterval(update, generationDelay);
-    document.onkeypress = function(event) {
-        if (String.fromCharCode(event.charCode) == "p") {
-            paused = !paused;
+    timer = setInterval(update, generationDelay);
+}
+
+function togglePause() {
+    paused = !paused;
+}
+
+function stopTimer() {
+    clearInterval(timer);
+}
+
+function destroyNeighbours() {
+    var x, y;
+    for (x = 0; x < cellsX; x++) {
+        for (y = 0; y < cellsY; y++) {
+            grid[x][y].neighbours = undefined;
         }
     }
 }
 
-function start(field, h, w, type) {
+function destroyGrid() {
+    var x, y;
+    for (x = 0; x < cellsX; x++) {
+        for (y = 0; y < cellsY; y++) {
+            grid[x][y].view.remove();
+            grid[x][y] = undefined;
+        }
+        grid[x] = undefined;
+    }
+    grid = [];
+}
+
+function destroy() {
+    stopTimer();
+    destroyNeighbours();
+    destroyGrid();
+}
+
+function restart() {
+    destroy();
+    _start();
+}
+
+function start(field, infoProvider) {
     svgField = field;
-    height = h;
-    width = w;
-    cellType = type;
+    _infoProvider = infoProvider;
+    _start();
+}
+
+function _start() {
+    height = _infoProvider.getHeight();
+    width = _infoProvider.getWidth();
+    cellType = _infoProvider.getCellType();
 
     switch (cellType) {
         case CellTypes.RECT:
@@ -179,4 +222,10 @@ function start(field, h, w, type) {
     startTimer();
 }
 
-start(document.getElementById("svg"), window.innerHeight, window.innerWidth, CellTypes.HEX);
+function createEmptyInfoProvider() {
+    var infoProvider = {};
+    infoProvider.getHeight = function() {return 0;};
+    infoProvider.getWidth = function() {return 0;};
+    infoProvider.getCellType = function() {return null;};
+    return infoProvider;
+}

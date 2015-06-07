@@ -23,10 +23,34 @@
             fill: lime;
         }
     </style>
+    <script src="hexlife.js"></script>
+    <script>
+        function onLoad() {
+            document.onkeypress = function(event) {
+                switch (String.fromCharCode(event.charCode)) {
+                    case "p":
+                        togglePause();
+                        break;
+                    case "R":
+                        restart();
+                }
+            };
+            document.addEventListener("contextmenu", function(event) {
+                event.preventDefault();
+                console.log("menu!");
+                return false;
+            });
+
+            var infoProvider = createEmptyInfoProvider();
+            infoProvider.getHeight = function() {return window.innerHeight;};
+            infoProvider.getWidth = function() {return window.innerWidth;};
+            infoProvider.getCellType = function() {return CellTypes.HEX};
+            start(document.getElementById("svg"), infoProvider);
+        }
+    </script>
 </head>
-<body>
-    <svg id="svg" width="300px" height="300px">
+<body onload="onLoad();">
+    <svg id="svg">
     </svg>
-<script src="hexlife.js"></script>
 </body>
 </html>
