@@ -30,10 +30,14 @@
             left: 0;
             padding: 2px;
         }
-        #menu > * {
+        #menu .menuItem {
+            margin: 0;
             padding: 0 5px;
         }
-        #menu > *:hover {
+        #menu > * {
+            margin: 0 5px;
+        }
+        #menu .menuItem:hover {
             background: cornflowerblue;
         }
     </style>
@@ -42,6 +46,7 @@
         var menuStyle;
         function onLoad() {
             menuStyle = document.getElementById("menu").style;
+            neighbourhood = document.getElementById("neighbourhood");
             document.onkeypress = function(event) {
                 switch (String.fromCharCode(event.charCode)) {
                     case "p":
@@ -61,11 +66,22 @@
                 return false;
             });
             document.onclick = function() {hideMenu();};
+            var options = neighbourhood.options;
+
+            //damned HTMLOptionsCollection is not array-like enough in Chrome to use "of" or ".forEach()"
+            //it is array-like enough in Firefox, though, but everything is slo-ow there.
+            for (var i = 0; i < options.length; i++) {
+                var option = options[i];
+                option.fn = Neighbourhoods[option.value];
+            }
 
             var infoProvider = createEmptyInfoProvider();
             infoProvider.getHeight = function() {return window.innerHeight;};
             infoProvider.getWidth = function() {return window.innerWidth;};
             infoProvider.getCellType = function() {return CellTypes.HEX};
+            infoProvider.getNeighboursFunction = function() {
+                return neighbourhood.selectedOptions[0].fn;
+            };
             start(document.getElementById("svg"), infoProvider);
         }
         function showMenu(x, y) {
@@ -81,8 +97,14 @@
 <body onload="onLoad();">
     <svg id="svg">
     </svg>
-    <div id="menu" style="display: none;" onclick="hideMenu();">
-        <div onclick="restart();">Restart</div>
+    <div id="menu" style="display: none;" onclick="event.stopPropagation(); return false;">
+        <div onclick="hideMenu(); restart();" class="menuItem">Restart</div>
+        <div>Neighbourhood:</div>
+        <select id="neighbourhood" onchange="restart(); hideMenu();">
+            <option value="RECT_NEUMANN">Rectangular von Neumann</option>
+            <option value="RECT_MOORE">Rectangular Moore</option>
+            <option value="HEX" selected="selected">Hexagonal</option>
+        </select>
     </div>
 </body>
 </html>

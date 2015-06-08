@@ -96,42 +96,38 @@ function mod(a, b) {
     return ((a % b) + b) % b;
 }
 
-function getRectMooreNeighbours(grid, x, y) {
-    return [
-        grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x - 1), cellsX)][mod((y), cellsY)],
-        grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
-        grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
-        grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
-    ]
-}
-
-function getRectNeumannNeighbours(grid, x, y) {
-    return [
-        grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x - 1), cellsX)][mod((y), cellsY)],
-        grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
-        grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
-        grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
-    ]
-}
-
-function getHexNeighbours(grid, x, y) {
-    return [
-        grid[mod((x - 1), cellsX)][mod((y), cellsY)],
-        grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
-        grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
-        grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y), cellsY)]
-    ]
-}
+const Neighbourhoods ={
+    RECT_NEUMANN: function(grid, x, y) {
+        return [
+            grid[mod((x - 1), cellsX)][mod((y), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
+            grid[mod((x + 1), cellsX)][mod((y), cellsY)]
+        ];
+    },
+    RECT_MOORE: function(grid, x, y) {
+        return [
+            grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
+            grid[mod((x - 1), cellsX)][mod((y), cellsY)],
+            grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
+            grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
+            grid[mod((x + 1), cellsX)][mod((y), cellsY)],
+            grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
+        ];
+    },
+    HEX: function(grid, x, y) {
+        return [
+            grid[mod((x - 1), cellsX)][mod((y), cellsY)],
+            grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
+            grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
+            grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
+            grid[mod((x + 1), cellsX)][mod((y), cellsY)]
+        ];
+    }
+};
 
 function initGrid() {
     var x, y;
@@ -252,6 +248,6 @@ function createEmptyInfoProvider() {
     infoProvider.getHeight = function() {return 100;};
     infoProvider.getWidth = function() {return 100;};
     infoProvider.getCellType = function() {return CellTypes.HEX;};
-    infoProvider.getNeighboursFunction = function() {return getHexNeighbours;};
+    infoProvider.getNeighboursFunction = function() {return Neighbourhoods.HEX;};
     return infoProvider;
 }
