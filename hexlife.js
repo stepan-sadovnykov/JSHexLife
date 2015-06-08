@@ -17,7 +17,7 @@ var cellSide;
 var effectiveCellHeight;
 var cellRadius;
 var grid = [];
-var getNeighbourhood;
+var getNeighbours = function() {return []};
 var timer;
 
 const CellTypes = {
@@ -96,16 +96,40 @@ function mod(a, b) {
     return ((a % b) + b) % b;
 }
 
-function getMooreNeighbours(grid, x, y) {
+function getRectMooreNeighbours(grid, x, y) {
     return [
-        //grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
+        grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
         grid[mod((x - 1), cellsX)][mod((y), cellsY)],
         grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
         grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
         grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
         grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-        grid[mod((x + 1), cellsX)][mod((y), cellsY)]//,
-        //grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
+        grid[mod((x + 1), cellsX)][mod((y), cellsY)],
+        grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
+    ]
+}
+
+function getRectNeumannNeighbours(grid, x, y) {
+    return [
+        grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
+        grid[mod((x - 1), cellsX)][mod((y), cellsY)],
+        grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
+        grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
+        grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
+        grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
+        grid[mod((x + 1), cellsX)][mod((y), cellsY)],
+        grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
+    ]
+}
+
+function getHexNeighbours(grid, x, y) {
+    return [
+        grid[mod((x - 1), cellsX)][mod((y), cellsY)],
+        grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
+        grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
+        grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
+        grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
+        grid[mod((x + 1), cellsX)][mod((y), cellsY)]
     ]
 }
 
@@ -123,7 +147,7 @@ function initNeighbours() {
     var x, y;
     for (x = 0; x < cellsX; x++) {
         for (y = 0; y < cellsY; y++) {
-            grid[x][y].neighbours = getMooreNeighbours(grid, x, y);
+            grid[x][y].neighbours = getNeighbours(grid, x, y);
         }
     }
 }
@@ -198,6 +222,7 @@ function _start() {
     height = _infoProvider.getHeight();
     width = _infoProvider.getWidth();
     cellType = _infoProvider.getCellType();
+    getNeighbours = _infoProvider.getNeighboursFunction();
 
     switch (cellType) {
         case CellTypes.RECT:
@@ -224,8 +249,9 @@ function _start() {
 
 function createEmptyInfoProvider() {
     var infoProvider = {};
-    infoProvider.getHeight = function() {return 0;};
-    infoProvider.getWidth = function() {return 0;};
-    infoProvider.getCellType = function() {return null;};
+    infoProvider.getHeight = function() {return 100;};
+    infoProvider.getWidth = function() {return 100;};
+    infoProvider.getCellType = function() {return CellTypes.HEX;};
+    infoProvider.getNeighboursFunction = function() {return getHexNeighbours;};
     return infoProvider;
 }
