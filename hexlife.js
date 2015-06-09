@@ -20,7 +20,7 @@ var grid = [];
 var getNeighbours = function() {return []};
 var timer;
 
-const CellTypes = {
+const Tessellations = {
     RECT: 0,
     HEX: 1,
     TRIANGLE: 2
@@ -30,14 +30,14 @@ function createCellView(field, x, y) {
     var svgUri = "http://www.w3.org/2000/svg";
     var item;
     switch (cellType) {
-        case CellTypes.RECT:
+        case Tessellations.RECT:
             item = document.createElementNS(svgUri, "rect");
             item.setAttributeNS(null, "width", cellSide + "px");
             item.setAttributeNS(null, "height", cellSide + "px");
             item.setAttributeNS(null, "x", (cellDiameter * x) + "px");
             item.setAttributeNS(null, "y", (cellDiameter * y) + "px");
             break;
-        case CellTypes.HEX:
+        case Tessellations.HEX:
             item = document.createElementNS(svgUri, "polygon");
             var effectiveX = (x + 0.5 * y) % cellsX;
             var points = [
@@ -64,7 +64,7 @@ function createCell(x, y) {
     var cell = {};
     cell.state = Math.random() < density;
     cell.sum = undefined;
-    cell.view = createCellView(svgField, x, y, CellTypes.HEX);
+    cell.view = createCellView(svgField, x, y, Tessellations.HEX);
     cell.neighbours = [];
 
     cell.view.onclick = function() {
@@ -221,11 +221,11 @@ function _start() {
     getNeighbours = _infoProvider.getNeighboursFunction();
 
     switch (cellType) {
-        case CellTypes.RECT:
+        case Tessellations.RECT:
             cellSide = cellDiameter;
             effectiveCellHeight = cellDiameter;
             break;
-        case CellTypes.HEX:
+        case Tessellations.HEX:
             cellRadius = cellDiameter / 2;
             cellSide = cellRadius / Math.sin(Math.PI / 3);
             effectiveCellHeight = (cellSide * 3 / 2);
@@ -247,7 +247,7 @@ function createEmptyInfoProvider() {
     var infoProvider = {};
     infoProvider.getHeight = function() {return 100;};
     infoProvider.getWidth = function() {return 100;};
-    infoProvider.getCellType = function() {return CellTypes.HEX;};
+    infoProvider.getCellType = function() {return Tessellations.HEX;};
     infoProvider.getNeighboursFunction = function() {return Neighbourhoods.HEX;};
     return infoProvider;
 }

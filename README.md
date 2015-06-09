@@ -6,6 +6,7 @@ Implemented:
 - Moore neighbourhood (Chebyshev distance = 1)
 - Von Neumann neighbourhood (Manhattan distance = 1)
 - neighbourhood selection
+- tessellation selection
 - Conway's rules
 - click-editing
 - pausing
@@ -13,8 +14,6 @@ Implemented:
 Planned:
 - triangular lattice
 - non-Conway rule configuration
-- neighbourhoods taking into account triangular lattice
-- rule editing (lattice selection)
 - rules with some randomness
 - cell ages
 - flat finite lattices
