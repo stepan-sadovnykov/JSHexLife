@@ -10,6 +10,8 @@ var _infoProvider;
 var height;
 var width;
 var cellType;
+var displacements;
+var wrap;
 
 var cellsX;
 var cellsY;
@@ -17,7 +19,6 @@ var cellSide;
 var effectiveCellHeight;
 var cellRadius;
 var grid = [];
-var getNeighbours = function() {return []};
 var timer;
 
 const Tessellations = {
@@ -97,36 +98,33 @@ function mod(a, b) {
 }
 
 const Neighbourhoods ={
-    RECT_NEUMANN: function(grid, x, y) {
-        return [
-            grid[mod((x - 1), cellsX)][mod((y), cellsY)],
-            grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
-            grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
-            grid[mod((x + 1), cellsX)][mod((y), cellsY)]
-        ];
-    },
-    RECT_MOORE: function(grid, x, y) {
-        return [
-            grid[mod((x - 1), cellsX)][mod((y - 1), cellsY)],
-            grid[mod((x - 1), cellsX)][mod((y), cellsY)],
-            grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
-            grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
-            grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
-            grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-            grid[mod((x + 1), cellsX)][mod((y), cellsY)],
-            grid[mod((x + 1), cellsX)][mod((y + 1), cellsY)]
-        ];
-    },
-    HEX: function(grid, x, y) {
-        return [
-            grid[mod((x - 1), cellsX)][mod((y), cellsY)],
-            grid[mod((x - 1), cellsX)][mod((y + 1), cellsY)],
-            grid[mod((x), cellsX)]  [mod((y - 1), cellsY)],
-            grid[mod((x), cellsX)]  [mod((y + 1), cellsY)],
-            grid[mod((x + 1), cellsX)][mod((y - 1), cellsY)],
-            grid[mod((x + 1), cellsX)][mod((y), cellsY)]
-        ];
+    RECT_NEUMANN: [
+                      [-1,  0],
+            [ 0, -1],           [ 0,  1],
+                      [ 1,  0]
+        ],
+    RECT_MOORE: [
+            [-1, -1], [-1,  0], [-1,  1],
+            [ 0, -1],           [ 0,  1],
+            [ 1, -1], [ 1,  0], [ 1,  1]
+        ],
+    HEX: [
+                      [-1,  0], [-1,  1],
+            [ 0, -1],           [ 0,  1],
+            [ 1, -1], [ 1,  0]
+        ]
+};
+
+var getNeighbours = function(grid, x, y) {
+    var result = [];
+    for (var d of displacements) {
+        var _x = mod(x + d[0], cellsX);
+        var _y = mod(y + d[1], cellsY);
+        if (!wrap && (_x != x + d[0] || _y != y + d[1]))
+            continue;
+        result.push(grid[_x][_y]);
     }
+    return result;
 };
 
 function initGrid() {
@@ -218,7 +216,8 @@ function _start() {
     height = _infoProvider.getHeight();
     width = _infoProvider.getWidth();
     cellType = _infoProvider.getCellType();
-    getNeighbours = _infoProvider.getNeighboursFunction();
+    displacements = _infoProvider.getNeighbourDisplacements();
+    wrap = _infoProvider.getEdgeWrapping();
 
     switch (cellType) {
         case Tessellations.RECT:
@@ -247,7 +246,8 @@ function createEmptyInfoProvider() {
     var infoProvider = {};
     infoProvider.getHeight = function() {return 100;};
     infoProvider.getWidth = function() {return 100;};
+    infoProvider.getEdgeWrapping = function() {return true;};
     infoProvider.getCellType = function() {return Tessellations.HEX;};
-    infoProvider.getNeighboursFunction = function() {return Neighbourhoods.HEX;};
+    infoProvider.getNeighbourDisplacements = function() {return Neighbourhoods.HEX;};
     return infoProvider;
 }

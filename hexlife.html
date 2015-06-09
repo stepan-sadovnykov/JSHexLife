@@ -93,7 +93,7 @@
             infoProvider.getCellType = function() {
                 return tessellation.selectedOptions[0].tesselation;
             };
-            infoProvider.getNeighboursFunction = function() {
+            infoProvider.getNeighbourDisplacements = function() {
                 return neighbourhood.selectedOptions[0].fn;
             };
             start(document.getElementById("svg"), infoProvider);
