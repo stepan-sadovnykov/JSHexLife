@@ -2,9 +2,10 @@
 Reimplementation of my old pet project in JS
 
 Implemented:
-- hexagonal (square with a simple change of a constant) toroidal lattice
+- hexagonal, triangular and square tesselations of toroidal surface
 - Moore neighbourhood (Chebyshev distance = 1)
 - Von Neumann neighbourhood (Manhattan distance = 1)
+- honeycomb neighbourhood
 - neighbourhood selection
 - tessellation selection
 - Conway's rules
@@ -12,7 +13,8 @@ Implemented:
 - pausing
 
 Planned:
-- triangular lattice
+- triangular tesselation neighbourhoods
+- hexagonal star and tripod neighbourhoods
 - non-Conway rule configuration
 - rules with some randomness
 - cell ages
