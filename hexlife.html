@@ -78,7 +78,7 @@
             //it is array-like enough in Firefox, though, but everything is slo-ow there.
             for (i = 0; i < options.length; i++) {
                 option = options[i];
-                option.fn = Neighbourhoods[option.value];
+                option.displacements = Neighbourhoods[option.value];
             }
 
             options = tessellation.options;
@@ -94,7 +94,7 @@
                 return tessellation.selectedOptions[0].tesselation;
             };
             infoProvider.getNeighbourDisplacements = function() {
-                return neighbourhood.selectedOptions[0].fn;
+                return neighbourhood.selectedOptions[0].displacements;
             };
             start(document.getElementById("svg"), infoProvider);
         }
@@ -123,6 +123,7 @@
         <select id="tessellation" onchange="restart(); hideMenu();">
             <option value="RECT">Rectangular</option>
             <option value="HEX" selected="selected">Hexagonal</option>
+            <option value="TRIANGLE">Triangular</option>
         </select>
     </div>
 </body>

@@ -34,9 +34,9 @@ function createCellView(field, x, y) {
     var points;
     var path = "";
     var point;
+    item = document.createElementNS(svgUri, "polygon");
     switch (cellType) {
         case Tessellations.RECT:
-            item = document.createElementNS(svgUri, "polygon");
             effectiveX = x;
             points = [
                 [0, 0],
@@ -47,11 +47,8 @@ function createCellView(field, x, y) {
             for (point of points) {
                 path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
             }
-
-            item.setAttributeNS(null, "points", path);
             break;
         case Tessellations.HEX:
-            item = document.createElementNS(svgUri, "polygon");
             effectiveX = (x + 0.5 * y) % cellsX;
             points = [
                 [cellRadius, 0],
@@ -64,10 +61,23 @@ function createCellView(field, x, y) {
             for (point of points) {
                 path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
             }
-
-            item.setAttributeNS(null, "points", path);
+            break;
+        case Tessellations.TRIANGLE:
+            points = [
+                [0, 0],
+                [cellDiameter, effectiveCellHeight],
+                [0, effectiveCellHeight * 2]
+            ];
+            for (point of points) {
+                var isOddDiagonal = (x + y) % 2;
+                var direction = isOddDiagonal ? -1 : 1;
+                var _x = direction * point[0] + x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
+                path += _x + "," + (point[1] + y * effectiveCellHeight) + " ";
+            }
+            console.log(x + ", " + y + ": " + path);
             break;
     }
+    item.setAttributeNS(null, "points", path);
     field.appendChild(item);
     return item;
 }
@@ -239,7 +249,7 @@ function _start() {
             effectiveCellHeight = (cellSide * 3 / 2);
             break;
         case Tessellations.TRIANGLE:
-            effectiveCellHeight = 2 * cellDiameter / Math.tan(Math.PI / 3);
+            effectiveCellHeight = cellDiameter / Math.tan(Math.PI / 3);
             break;
     }
 
