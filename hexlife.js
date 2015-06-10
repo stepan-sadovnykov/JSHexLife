@@ -17,7 +17,7 @@ var cellsX;
 var cellsY;
 var cellSide;
 var effectiveCellHeight;
-var cellRadius;
+var cellRadius = cellDiameter / 2;
 var grid = [];
 var timer;
 
@@ -29,19 +29,31 @@ const Tessellations = {
 
 function createCellView(field, x, y) {
     var svgUri = "http://www.w3.org/2000/svg";
+    var effectiveX;
     var item;
+    var points;
+    var path = "";
+    var point;
     switch (cellType) {
         case Tessellations.RECT:
-            item = document.createElementNS(svgUri, "rect");
-            item.setAttributeNS(null, "width", cellSide + "px");
-            item.setAttributeNS(null, "height", cellSide + "px");
-            item.setAttributeNS(null, "x", (cellDiameter * x) + "px");
-            item.setAttributeNS(null, "y", (cellDiameter * y) + "px");
+            item = document.createElementNS(svgUri, "polygon");
+            effectiveX = x;
+            points = [
+                [0, 0],
+                [cellDiameter, 0],
+                [cellDiameter, effectiveCellHeight],
+                [0, effectiveCellHeight]
+            ];
+            for (point of points) {
+                path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
+            }
+
+            item.setAttributeNS(null, "points", path);
             break;
         case Tessellations.HEX:
             item = document.createElementNS(svgUri, "polygon");
-            var effectiveX = (x + 0.5 * y) % cellsX;
-            var points = [
+            effectiveX = (x + 0.5 * y) % cellsX;
+            points = [
                 [cellRadius, 0],
                 [cellDiameter, cellSide / 2],
                 [cellDiameter, effectiveCellHeight],
@@ -49,8 +61,7 @@ function createCellView(field, x, y) {
                 [0, effectiveCellHeight],
                 [0, cellSide / 2]
             ];
-            var path = "";
-            for (var point of points) {
+            for (point of points) {
                 path += (point[0] + effectiveX * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
             }
 
@@ -221,13 +232,14 @@ function _start() {
 
     switch (cellType) {
         case Tessellations.RECT:
-            cellSide = cellDiameter;
             effectiveCellHeight = cellDiameter;
             break;
         case Tessellations.HEX:
-            cellRadius = cellDiameter / 2;
             cellSide = cellRadius / Math.sin(Math.PI / 3);
             effectiveCellHeight = (cellSide * 3 / 2);
+            break;
+        case Tessellations.TRIANGLE:
+            effectiveCellHeight = 2 * cellDiameter / Math.tan(Math.PI / 3);
             break;
     }
 
