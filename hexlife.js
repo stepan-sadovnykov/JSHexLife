@@ -86,7 +86,7 @@ function createCell(x, y) {
     var cell = {};
     cell.state = Math.random() < density;
     cell.sum = undefined;
-    cell.view = createCellView(svgField, x, y, Tessellations.HEX);
+    cell.view = createCellView(svgField, x, y);
     cell.neighbours = [];
 
     cell.view.onclick = function() {
@@ -120,26 +120,41 @@ function mod(a, b) {
 
 const Neighbourhoods ={
     RECT_NEUMANN: [
-                      [-1,  0],
-            [ 0, -1],           [ 0,  1],
-                      [ 1,  0]
+                      [ 0, -1],
+            [-1,  0],           [ 1,  0],
+                      [ 0,  1]
         ],
+    TRI_NEUMANN: [
+                      [ 0, -1],
+            [-1,  0],
+                      [ 0, -1]
+    ],
     RECT_MOORE: [
-            [-1, -1], [-1,  0], [-1,  1],
-            [ 0, -1],           [ 0,  1],
-            [ 1, -1], [ 1,  0], [ 1,  1]
+            [-1, -1], [ 0, -1], [ 1, -1],
+            [-1,  0],           [ 1,  0],
+            [-1,  1], [ 0,  1], [ 1,  1]
         ],
+    TRI_MOORE: [
+            [-1, -2], [ 0, -2],
+            [-1, -1], [ 0, -1], [ 1, -1],
+            [-1,  0],           [ 1,  0],
+            [-1,  1], [ 0,  1], [ 1,  1],
+            [-1,  2], [ 0,  2]
+    ],
     HEX: [
-                      [-1,  0], [-1,  1],
-            [ 0, -1],           [ 0,  1],
-            [ 1, -1], [ 1,  0]
+                      [ 0, -1], [ 1, -1],
+            [-1,  0],           [ 1,  0],
+            [-1,  1], [ 0,  1]
         ]
 };
 
 var getNeighbours = function(grid, x, y) {
     var result = [];
+    var isOddDiagonal = (x + y) % 2;
+    var isTriangular = cellType == Tessellations.TRIANGLE;
+    var reflected = isOddDiagonal && isTriangular;
     for (var d of displacements) {
-        var _x = mod(x + d[0], cellsX);
+        var _x = mod(x + (reflected ? -1 : 1) * d[0], cellsX);
         var _y = mod(y + d[1], cellsY);
         if (!wrap && (_x != x + d[0] || _y != y + d[1]))
             continue;
