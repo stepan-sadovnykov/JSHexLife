@@ -13,7 +13,6 @@ Implemented:
 - pausing
 
 Planned:
-- triangular tesselation neighbourhoods
 - hexagonal star and tripod neighbourhoods
 - non-Conway rule configuration
 - rules with some randomness
