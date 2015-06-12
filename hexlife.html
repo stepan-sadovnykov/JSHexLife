@@ -29,6 +29,7 @@
             top: 0;
             left: 0;
             padding: 2px;
+            border: solid 1px dimgray;
         }
         #menu .menuItem {
             margin: 0;
@@ -51,6 +52,7 @@
             menuStyle = document.getElementById("menu").style;
             var neighbourhood = document.getElementById("neighbourhood");
             var tessellation = document.getElementById("tessellation");
+            var wrap = document.getElementById("wrap");
             document.onkeypress = function(event) {
                 switch (String.fromCharCode(event.charCode)) {
                     case "p":
@@ -96,6 +98,9 @@
             infoProvider.getNeighbourDisplacements = function() {
                 return neighbourhood.selectedOptions[0].displacements;
             };
+            infoProvider.getEdgeWrapping = function() {
+                return wrap.selected;
+            };
             start(document.getElementById("svg"), infoProvider);
         }
         function showMenu(x, y) {
@@ -111,22 +116,25 @@
 <body onload="onLoad();">
     <svg id="svg">
     </svg>
-    <div id="menu" style="display: none;" onclick="event.stopPropagation(); return false;">
+    <div id="menu" style="display: none;" onclick="event.stopPropagation();">
         <div onclick="hideMenu(); restart();" class="menuItem">Restart</div>
         <label for="neighbourhood">Neighbourhood:</label>
-        <select id="neighbourhood" onchange="restart(); hideMenu();">
+        <select id="neighbourhood">
+            <option value="TRI_NEUMANN">Triangular von Neumann</option>
+            <option value="TRI_MOORE">Triangular Moore</option>
             <option value="RECT_NEUMANN">Rectangular von Neumann</option>
             <option value="RECT_MOORE">Rectangular Moore</option>
             <option value="HEX" selected="selected">Hexagonal honeycomb</option>
-            <option value="TRI_NEUMANN">Triangular von Neumann</option>
-            <option value="TRI_MOORE">Triangular Moore</option>
+            <option value="HEX_TRIPOD">Hexagonal tripod</option>
+            <option value="HEX_STAR">Hexagonal star</option>
         </select>
         <label for="tessellation">Tessellation:</label>
-        <select id="tessellation" onchange="restart(); hideMenu();">
+        <select id="tessellation">
             <option value="RECT">Rectangular</option>
             <option value="HEX" selected="selected">Hexagonal</option>
             <option value="TRIANGLE">Triangular</option>
         </select>
+        <div><label for="wrap">Edge wrap:</label><input id="wrap" type="checkbox" checked="checked" /></div>
     </div>
 </body>
 </html>
