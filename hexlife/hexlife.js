@@ -74,6 +74,7 @@ function createCellView(field, x, y) {
                 var _x = direction * point[0] + x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
                 path += _x + "," + (point[1] + y * effectiveCellHeight) + " ";
             }
+            console.log(x + ", " + y + ": " + path);
             break;
     }
     item.setAttributeNS(null, "points", path);
@@ -126,7 +127,7 @@ const Neighbourhoods ={
     TRI_NEUMANN: [
                       [ 0, -1],
             [-1,  0],
-                      [ 0,  1]
+                      [ 0, -1]
     ],
     RECT_MOORE: [
             [-1, -1], [ 0, -1], [ 1, -1],
@@ -140,23 +141,11 @@ const Neighbourhoods ={
             [-1,  1], [ 0,  1], [ 1,  1],
             [-1,  2], [ 0,  2]
     ],
-    HEX_TRIPOD: [
-                                [ 1, -1],
-            [-1,  0],
-                      [ 0,  1]
-    ],
     HEX: [
                       [ 0, -1], [ 1, -1],
             [-1,  0],           [ 1,  0],
             [-1,  1], [ 0,  1]
-        ],
-    HEX_STAR: [
-                                    [ 1, -2],
-                [-1, -1], [ 0, -1], [ 1, -1], [ 2, -1],
-                [-1,  0],           [ 1,  0],
-      [-2,  1], [-1,  1], [ 0,  1], [ 1,  1],
-                [-1,  2]
-    ]
+        ]
 };
 
 var getNeighbours = function(grid, x, y) {
@@ -165,11 +154,9 @@ var getNeighbours = function(grid, x, y) {
     var isTriangular = cellType == Tessellations.TRIANGLE;
     var reflected = isOddDiagonal && isTriangular;
     for (var d of displacements) {
-        var unwrapped_x = x + (reflected ? -1 : 1) * d[0];
-        var unwrapped_y = y + d[1];
-        var _x = mod(unwrapped_x, cellsX);
-        var _y = mod(unwrapped_y, cellsY);
-        if (!wrap && (_x != unwrapped_x || _y != unwrapped_y))
+        var _x = mod(x + (reflected ? -1 : 1) * d[0], cellsX);
+        var _y = mod(y + d[1], cellsY);
+        if (!wrap && (_x != x + d[0] || _y != y + d[1]))
             continue;
         result.push(grid[_x][_y]);
     }
