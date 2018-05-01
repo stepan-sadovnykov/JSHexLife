@@ -64,7 +64,7 @@
             };
             document.addEventListener("contextmenu", function(event) {
                 event.preventDefault();
-                if (menuStyle.display == "none") {
+                if (menuStyle.display === "none") {
                     showMenu(event.clientX, event.clientY);
                 } else {
                     hideMenu();

@@ -177,7 +177,7 @@ var getNeighbours = function(grid, x, y) {
     y = y|0;
     var result = [];
     var isOddDiagonal = (x + y) % 2;
-    var isTriangular = cellType == Tessellations.TRIANGLE;
+    var isTriangular = cellType === Tessellations.TRIANGLE;
     var reflected = isOddDiagonal && isTriangular;
     var i;
     var d;
@@ -187,7 +187,7 @@ var getNeighbours = function(grid, x, y) {
         var unwrapped_y = y + d[1];
         var _x = mod(unwrapped_x, cellsX);
         var _y = mod(unwrapped_y, cellsY);
-        if (!wrap && (_x != unwrapped_x || _y != unwrapped_y))
+        if (!wrap && (_x !== unwrapped_x || _y !== unwrapped_y))
             continue;
         result.push(grid[_x][_y]);
     }
