@@ -1,30 +1,30 @@
 "use strict";
 
-var cellDiameter = 10;
-var density = .3;
-var generationDelay = 100;
+const cellDiameter = 10;
+const density = .3;
+const generationDelay = 100;
 
-var svgField;
-var _infoProvider;
+let svgField;
+let _infoProvider;
 
-var height;
-var width;
-var cellType;
-var displacements;
-var wrap;
+let height;
+let width;
+let cellType;
+let displacements;
+let wrap;
 
-var cellsX, semiCellsX;
-var cellsY;
-var cellSide;
-var effectiveCellHeight;
-var shape;
-var getPath;
-var cellRadius = cellDiameter >> 1;
-var grid = [];
-var timer;
+let cellsX, semiCellsX;
+let cellsY;
+let cellSide;
+let effectiveCellHeight;
+let shape;
+let getPath;
+const cellRadius = cellDiameter >> 1;
+let grid = [];
+let timer;
 
-var keep   = 0b0000000001100;
-var create = 0b0000000001000;
+const keep   = 0b0000000001100;
+const create = 0b0000000001000;
 
 
 const Tessellations = {
@@ -43,9 +43,9 @@ class Cell {
     }
 
     updateSum() {
-        var sum = 0;
-        var neighbours = this.neighbours;
-        var i;
+        let sum = 0;
+        const neighbours = this.neighbours;
+        let i;
         for (i = 0; i < (neighbours.length|0); i++) {
             sum += neighbours[i].state|0;
         }
@@ -53,7 +53,7 @@ class Cell {
     }
 
     updateState() {
-        var sumMask = 1 << this.sum;
+        const sumMask = 1 << this.sum;
         this.state = !!(this.state ? (sumMask & keep) : (sumMask & create));
     }
 
@@ -70,9 +70,9 @@ class Cell {
 function getRectanglePath(x, y) {
     x = x|0;
     y = y|0;
-    var i;
-    var point;
-    var path = "";
+    let i;
+    let point;
+    let path = "";
     for (i = 0; i < shape.length; i++) {
         point = shape[i];
         path += (point[0] + x * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
@@ -83,12 +83,12 @@ function getRectanglePath(x, y) {
 function getHexagonPath(x, y) {
     x = x|0;
     y = y|0;
-    var i;
-    var point;
-    var effectiveX = ((x << 1) + y) % semiCellsX;
-    var offsetX = effectiveX * cellRadius;
-    var offsetY = y * effectiveCellHeight;
-    var path = "";
+    let i;
+    let point;
+    const effectiveX = ((x << 1) + y) % semiCellsX;
+    const offsetX = effectiveX * cellRadius;
+    const offsetY = y * effectiveCellHeight;
+    let path = "";
     for (i = 0; i < shape.length; i++) {
         point = shape[i];
         path += (point[0] + offsetX) + "," + (point[1] + offsetY) + " ";
@@ -99,27 +99,27 @@ function getHexagonPath(x, y) {
 function getTrianglePath(x, y) {
     x = x|0;
     y = y|0;
-    var i;
-    var point;
-    var path = "";
-    var isOddDiagonal = (x + y) % 2;
-    var direction = isOddDiagonal ? -1 : 1;
-    var offsetX = x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
-    var offsetY = y * effectiveCellHeight;
+    let i;
+    let point;
+    let path = "";
+    const isOddDiagonal = (x + y) % 2;
+    const direction = isOddDiagonal ? -1 : 1;
+    const offsetX = x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
+    const offsetY = y * effectiveCellHeight;
     for (i = 0; i < shape.length; i++) {
         point = shape[i];
-        var _x = direction * point[0] + offsetX;
+        const _x = direction * point[0] + offsetX;
         path += _x + "," + (point[1] + offsetY) + " ";
     }
     return path;
 }
 
+const svgUri = "http://www.w3.org/2000/svg";
 function createCellView(field, x, y) {
     x = x|0;
     y = y|0;
 
-    var svgUri = "http://www.w3.org/2000/svg";
-    var item;
+    let item;
     item = document.createElementNS(svgUri, "polygon");
     item.setAttribute("points", getPath(x, y));
     field.appendChild(item);
@@ -172,21 +172,21 @@ const Neighbourhoods ={
     ]
 };
 
-var getNeighbours = function(grid, x, y) {
+const getNeighbours = function(grid, x, y) {
     x = x|0;
     y = y|0;
-    var result = [];
-    var isOddDiagonal = (x + y) % 2;
-    var isTriangular = cellType === Tessellations.TRIANGLE;
-    var reflected = isOddDiagonal && isTriangular;
-    var i;
-    var d;
+    const result = [];
+    const isOddDiagonal = (x + y) % 2;
+    const isTriangular = cellType === Tessellations.TRIANGLE;
+    const reflected = isOddDiagonal && isTriangular;
+    let i;
+    let d;
     for (i = 0; i < displacements.length; i++) {
         d = displacements[i];
-        var unwrapped_x = x + (reflected ? -1 : 1) * d[0];
-        var unwrapped_y = y + d[1];
-        var _x = mod(unwrapped_x, cellsX);
-        var _y = mod(unwrapped_y, cellsY);
+        const unwrapped_x = x + (reflected ? -1 : 1) * d[0];
+        const unwrapped_y = y + d[1];
+        const _x = mod(unwrapped_x, cellsX);
+        const _y = mod(unwrapped_y, cellsY);
         if (!wrap && (_x !== unwrapped_x || _y !== unwrapped_y))
             continue;
         result.push(grid[_x][_y]);
@@ -195,7 +195,7 @@ var getNeighbours = function(grid, x, y) {
 };
 
 function initGrid() {
-    var x, y;
+    let x, y;
     for (x = 0; x < cellsX; x++) {
         grid[x] = [];
         for (y = 0; y < cellsY; y++) {
@@ -205,7 +205,7 @@ function initGrid() {
 }
 
 function initNeighbours() {
-    var x, y;
+    let x, y;
     for (x = 0; x < cellsX; x++) {
         for (y = 0; y < cellsY; y++) {
             grid[x][y].neighbours = getNeighbours(grid, x, y);
@@ -213,10 +213,10 @@ function initNeighbours() {
     }
 }
 
-var paused = false;
+let paused = false;
 function update() {
     if (paused) return;
-    var x, y;
+    let x, y;
     for (x = 0; x < cellsX; x++) {
         for (y = 0; y < cellsY; y++) {
             grid[x][y].updateSum();
@@ -247,7 +247,7 @@ function stopTimer() {
 }
 
 function destroyNeighbours() {
-    var x, y;
+    let x, y;
     for (x = 0; x < cellsX; x++) {
         for (y = 0; y < cellsY; y++) {
             grid[x][y].neighbours = undefined;
@@ -256,7 +256,7 @@ function destroyNeighbours() {
 }
 
 function destroyGrid() {
-    var x, y;
+    let x, y;
     for (x = 0; x < cellsX; x++) {
         for (y = 0; y < cellsY; y++) {
             grid[x][y].view.remove();
@@ -339,7 +339,7 @@ function _start() {
 }
 
 function createEmptyInfoProvider() {
-    var infoProvider = {};
+    const infoProvider = {};
     infoProvider.getHeight = function() {return 100;};
     infoProvider.getWidth = function() {return 100;};
     infoProvider.getEdgeWrapping = function() {return true;};

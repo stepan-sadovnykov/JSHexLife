@@ -47,12 +47,12 @@
     </style>
     <script src="hexlife.js"></script>
     <script>
-        var menuStyle;
+        let menuStyle;
         function onLoad() {
             menuStyle = document.getElementById("menu").style;
-            var neighbourhood = document.getElementById("neighbourhood");
-            var tessellation = document.getElementById("tessellation");
-            var wrap = document.getElementById("wrap");
+            const neighbourhood = document.getElementById("neighbourhood");
+            const tessellation = document.getElementById("tessellation");
+            const wrap = document.getElementById("wrap");
             document.onkeypress = function(event) {
                 switch (String.fromCharCode(event.charCode)) {
                     case "p":
@@ -73,7 +73,7 @@
             });
             document.onclick = function() {hideMenu();};
 
-            var options, i, option;
+            let options, i, option;
 
             options = neighbourhood.options;
             //damned HTMLOptionsCollection is not array-like enough in Chrome to use "of" or ".forEach()"
@@ -89,7 +89,7 @@
                 option.tesselation = Tessellations[option.value];
             }
 
-            var infoProvider = createEmptyInfoProvider();
+            const infoProvider = createEmptyInfoProvider();
             infoProvider.getHeight = function() {return window.innerHeight;};
             infoProvider.getWidth = function() {return window.innerWidth;};
             infoProvider.getCellType = function() {
