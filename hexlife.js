@@ -4,9 +4,6 @@ const cellDiameter = 10;
 const density = .3;
 const generationDelay = 100;
 
-let svgField;
-let _infoProvider;
-
 let height;
 let width;
 let cellType;
@@ -15,7 +12,6 @@ let wrap;
 
 let cellsX, semiCellsX;
 let cellsY;
-let cellSide;
 let effectiveCellHeight;
 let shape;
 let getPath;
@@ -38,10 +34,10 @@ const Tessellations = {
 };
 
 class Cell {
-    constructor(x, y) {
+    constructor(field, x, y) {
         this.state = Math.random() < density;
         this.sum = 0;
-        this.view = createCellView(svgField, x, y);
+        this.view = createCellView(field, x, y);
         this.view.onclick = () => this.toggleState();
         this.view.cell = this;
         this.neighbours = [];
@@ -199,13 +195,13 @@ const getNeighbours = function(grid, x, y) {
     return result;
 };
 
-function initGrid() {
+function initGrid(field) {
     let x, y;
     console.log(`Init grid ${cellsX} by ${cellsY}: ${cellsX * cellsY} cells`);
     for (x = 0; x < cellsX; x++) {
         grid[x] = [];
         for (y = 0; y < cellsY; y++) {
-            grid[x][y] = new Cell(x, y);
+            grid[x][y] = new Cell(field, x, y);
         }
     }
 }
@@ -279,23 +275,13 @@ function destroy() {
     destroyGrid();
 }
 
-function restart() {
-    destroy();
-    _start();
-}
-
-function start(field, infoProvider) {
-    svgField = field;
-    _infoProvider = infoProvider;
-    _start();
-}
-
-function _start() {
-    height = _infoProvider.getHeight();
-    width = _infoProvider.getWidth();
-    cellType = _infoProvider.getCellType();
-    displacements = _infoProvider.getNeighbourDisplacements();
-    wrap = _infoProvider.getEdgeWrapping();
+function start(infoProvider) {
+    field = document.createElementNS(svgUri, "svg");
+    height = infoProvider.getHeight();
+    width = infoProvider.getWidth();
+    cellType = infoProvider.getCellType();
+    displacements = infoProvider.getNeighbourDisplacements();
+    wrap = infoProvider.getEdgeWrapping();
 
     switch (cellType) {
         case Tessellations.RECT:
@@ -308,9 +294,9 @@ function _start() {
             ];
             getPath = getRectanglePath;
             break;
-        case Tessellations.HEX:
-            cellSide = cellRadius / Math.sin(Math.PI / 3);
-            effectiveCellHeight = (cellSide * 3 / 2)|0;
+        case Tessellations.HEX: {
+            let cellSide = cellRadius / Math.sin(Math.PI / 3);
+            effectiveCellHeight = (cellSide * 3 / 2) | 0;
             shape = [
                 [cellRadius, 0],
                 [cellDiameter, cellSide / 2],
@@ -321,6 +307,7 @@ function _start() {
             ];
             getPath = getHexagonPath;
             break;
+        }
         case Tessellations.TRIANGLE:
             effectiveCellHeight = (cellDiameter / Math.tan(Math.PI / 3))|0;
             shape = [
@@ -336,12 +323,13 @@ function _start() {
     semiCellsX = cellsX << 1;
     cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
 
-    svgField.setAttribute("height", height + "px");
-    svgField.setAttribute("width", width + "px");
+    field.setAttribute("height", height + "px");
+    field.setAttribute("width", width + "px");
 
-    initGrid();
+    initGrid(field);
     initNeighbours();
     startTimer();
+    return field;
 }
 
 function createEmptyInfoProvider() {
