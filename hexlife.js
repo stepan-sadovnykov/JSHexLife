@@ -22,10 +22,14 @@ let getPath;
 const cellRadius = cellDiameter >> 1;
 let grid = [];
 let timer;
+let activeCell = null;
 
 const keep   = 0b0000000001100;
 const create = 0b0000000001000;
 
+document.onmousemove = function (e) {
+    activeCell = e.target.cell;
+};
 
 const Tessellations = {
     RECT: 0,
@@ -38,7 +42,8 @@ class Cell {
         this.state = Math.random() < density;
         this.sum = 0;
         this.view = createCellView(svgField, x, y);
-        this.view.onclick = this.cellOnClick.bind(this);
+        this.view.onclick = () => this.toggleState();
+        this.view.cell = this;
         this.neighbours = [];
     }
 
@@ -61,7 +66,7 @@ class Cell {
         this.view.classList.toggle("true", !!this.state);
     }
 
-    cellOnClick() {
+    toggleState() {
         this.state = !this.state;
         this.updateCss();
     }
@@ -196,6 +201,7 @@ const getNeighbours = function(grid, x, y) {
 
 function initGrid() {
     let x, y;
+    console.log(`Init grid ${cellsX} by ${cellsY}: ${cellsX * cellsY} cells`);
     for (x = 0; x < cellsX; x++) {
         grid[x] = [];
         for (y = 0; y < cellsY; y++) {

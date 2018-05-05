@@ -54,12 +54,19 @@
             const tessellation = document.getElementById("tessellation");
             const wrap = document.getElementById("wrap");
             document.onkeypress = function(event) {
-                switch (String.fromCharCode(event.charCode)) {
+                switch (event.key) {
                     case "p":
                         togglePause();
                         break;
                     case "R":
                         restart();
+                        break;
+                    case 'm':
+                        showMenu(0, 0);
+                        break;
+                    case ' ':
+                        activeCell && activeCell.toggleState();
+                        break;
                 }
             };
             document.addEventListener("contextmenu", function(event) {
