@@ -1,21 +1,17 @@
 "use strict";
 
+const SVG_URI = "http://www.w3.org/2000/svg";
+
 const cellDiameter = 10;
 const density = .3;
 const generationDelay = 100;
 
-let height;
-let width;
 let cellType;
 let displacements;
 let wrap;
 
-let cellsX, semiCellsX;
+let cellsX;
 let cellsY;
-let effectiveCellHeight;
-let shape;
-let getPath;
-const cellRadius = cellDiameter >> 1;
 let grid = [];
 let timer;
 let activeCell = null;
@@ -27,17 +23,11 @@ document.onmousemove = function (e) {
     activeCell = e.target.cell;
 };
 
-const Tessellations = {
-    RECT: 0,
-    HEX: 1,
-    TRIANGLE: 2
-};
-
 class Cell {
-    constructor(field, x, y) {
+    constructor(field, getPath, x, y) {
         this.state = Math.random() < density;
         this.sum = 0;
-        this.view = createCellView(field, x, y);
+        this.view = createCellView(field, getPath, x, y);
         this.view.onclick = () => this.toggleState();
         this.view.cell = this;
         this.neighbours = [];
@@ -68,60 +58,12 @@ class Cell {
     }
 }
 
-function getRectanglePath(x, y) {
-    x = x|0;
-    y = y|0;
-    let i;
-    let point;
-    let path = "";
-    for (i = 0; i < shape.length; i++) {
-        point = shape[i];
-        path += (point[0] + x * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
-    }
-    return path;
-}
-
-function getHexagonPath(x, y) {
-    x = x|0;
-    y = y|0;
-    let i;
-    let point;
-    const effectiveX = ((x << 1) + y) % semiCellsX;
-    const offsetX = effectiveX * cellRadius;
-    const offsetY = y * effectiveCellHeight;
-    let path = "";
-    for (i = 0; i < shape.length; i++) {
-        point = shape[i];
-        path += (point[0] + offsetX) + "," + (point[1] + offsetY) + " ";
-    }
-    return path;
-}
-
-function getTrianglePath(x, y) {
-    x = x|0;
-    y = y|0;
-    let i;
-    let point;
-    let path = "";
-    const isOddDiagonal = (x + y) % 2;
-    const direction = isOddDiagonal ? -1 : 1;
-    const offsetX = x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
-    const offsetY = y * effectiveCellHeight;
-    for (i = 0; i < shape.length; i++) {
-        point = shape[i];
-        const _x = direction * point[0] + offsetX;
-        path += _x + "," + (point[1] + offsetY) + " ";
-    }
-    return path;
-}
-
-const svgUri = "http://www.w3.org/2000/svg";
-function createCellView(field, x, y) {
+function createCellView(field, getPath, x, y) {
     x = x|0;
     y = y|0;
 
     let item;
-    item = document.createElementNS(svgUri, "polygon");
+    item = document.createElementNS(SVG_URI, "polygon");
     item.setAttribute("points", getPath(x, y));
     field.appendChild(item);
     return item;
@@ -130,6 +72,101 @@ function createCellView(field, x, y) {
 function mod(a, b) {
     return ((a % b) + b) % b;
 }
+
+const Tessellations = {
+    RECT: (width, height, cellDiameter) => {
+        const effectiveCellHeight = cellDiameter | 0;
+        const cellsX = (Math.floor(width / cellDiameter) - 1)|0;
+        const cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
+
+        return {
+            cellsX, cellsY,
+            shape: [
+                [0, 0],
+                [cellDiameter, 0],
+                [cellDiameter, effectiveCellHeight],
+                [0, effectiveCellHeight]
+            ],
+            getPath: (x, y) => {
+                x = x | 0;
+                y = y | 0;
+                let i;
+                let point;
+                let path = "";
+                for (i = 0; i < shape.length; i++) {
+                    point = shape[i];
+                    path += (point[0] + x * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
+                }
+                return path
+            }
+        }
+    },
+    HEX: (width, height, cellDiameter) => {
+        const cellRadius = cellDiameter >> 1;
+        const cellSide = cellRadius / Math.sin(Math.PI / 3);
+        const effectiveCellHeight = (cellSide * 3 / 2) | 0;
+        const cellsX = (Math.floor(width / cellDiameter) - 1)|0;
+        const semiCellsX = cellsX << 1;
+        const cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
+        const shape = [
+            [cellRadius, 0],
+            [cellDiameter, cellSide / 2],
+            [cellDiameter, effectiveCellHeight],
+            [cellRadius, cellSide * 2],
+            [0, effectiveCellHeight],
+            [0, cellSide / 2]
+        ];
+        return {
+            cellsX, cellsY,
+            shape,
+            getPath: (x, y) => {
+                x = x|0;
+                y = y|0;
+                let i;
+                let point;
+                const effectiveX = ((x << 1) + y) % semiCellsX;
+                const offsetX = effectiveX * cellRadius;
+                const offsetY = y * effectiveCellHeight;
+                let path = "";
+                for (i = 0; i < shape.length; i++) {
+                    point = shape[i];
+                    path += (point[0] + offsetX) + "," + (point[1] + offsetY) + " ";
+                }
+                return path;
+            }
+        }
+    },
+    TRIANGLE: (width, height, cellDiameter) => {
+        const effectiveCellHeight = (cellDiameter / Math.tan(Math.PI / 3)) | 0;
+        const cellsX = (Math.floor(width / cellDiameter) - 1)|0;
+        const cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
+        return {
+            cellsX, cellsY,
+            shape: [
+                [0, 0],
+                [cellDiameter, effectiveCellHeight],
+                [0, effectiveCellHeight * 2]
+            ],
+            getPath: (x, y) => {
+                x = x|0;
+                y = y|0;
+                let i;
+                let point;
+                let path = "";
+                const isOddDiagonal = (x + y) % 2;
+                const direction = isOddDiagonal ? -1 : 1;
+                const offsetX = x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
+                const offsetY = y * effectiveCellHeight;
+                for (i = 0; i < shape.length; i++) {
+                    point = shape[i];
+                    const _x = direction * point[0] + offsetX;
+                    path += _x + "," + (point[1] + offsetY) + " ";
+                }
+                return path;
+            }
+        };
+    }
+};
 
 const Neighbourhoods ={
     RECT_NEUMANN: [
@@ -195,13 +232,13 @@ const getNeighbours = function(grid, x, y) {
     return result;
 };
 
-function initGrid(field) {
+function initGrid(field, getPath) {
     let x, y;
     console.log(`Init grid ${cellsX} by ${cellsY}: ${cellsX * cellsY} cells`);
     for (x = 0; x < cellsX; x++) {
         grid[x] = [];
         for (y = 0; y < cellsY; y++) {
-            grid[x][y] = new Cell(field, x, y);
+            grid[x][y] = new Cell(field, getPath, x, y);
         }
     }
 }
@@ -276,57 +313,22 @@ function destroy() {
 }
 
 function start(infoProvider) {
-    field = document.createElementNS(svgUri, "svg");
-    height = infoProvider.getHeight();
-    width = infoProvider.getWidth();
+    field = document.createElementNS(SVG_URI, "svg");
+    const height = infoProvider.getHeight();
+    const width = infoProvider.getWidth();
     cellType = infoProvider.getCellType();
     displacements = infoProvider.getNeighbourDisplacements();
     wrap = infoProvider.getEdgeWrapping();
 
-    switch (cellType) {
-        case Tessellations.RECT:
-            effectiveCellHeight = cellDiameter|0;
-            shape = [
-                [0, 0],
-                [cellDiameter, 0],
-                [cellDiameter, effectiveCellHeight],
-                [0, effectiveCellHeight]
-            ];
-            getPath = getRectanglePath;
-            break;
-        case Tessellations.HEX: {
-            let cellSide = cellRadius / Math.sin(Math.PI / 3);
-            effectiveCellHeight = (cellSide * 3 / 2) | 0;
-            shape = [
-                [cellRadius, 0],
-                [cellDiameter, cellSide / 2],
-                [cellDiameter, effectiveCellHeight],
-                [cellRadius, cellSide * 2],
-                [0, effectiveCellHeight],
-                [0, cellSide / 2]
-            ];
-            getPath = getHexagonPath;
-            break;
-        }
-        case Tessellations.TRIANGLE:
-            effectiveCellHeight = (cellDiameter / Math.tan(Math.PI / 3))|0;
-            shape = [
-                [0, 0],
-                [cellDiameter, effectiveCellHeight],
-                [0, effectiveCellHeight * 2]
-            ];
-            getPath = getTrianglePath;
-            break;
-    }
+    let tessellation = cellType(width, height, cellDiameter);
+    let { getPath } = tessellation;
 
-    cellsX = (Math.floor(width / cellDiameter) - 1)|0;
-    semiCellsX = cellsX << 1;
-    cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
+    ({ cellsX, cellsY } = tessellation);
 
     field.setAttribute("height", height + "px");
     field.setAttribute("width", width + "px");
 
-    initGrid(field);
+    initGrid(field, getPath);
     initNeighbours();
     startTimer();
     return field;

@@ -12,6 +12,7 @@
         }
         svg > * {
             fill: darkgray;
+            will-change: fill;
         }
         svg > *:hover {
             fill: lightgray;
@@ -67,6 +68,7 @@
                     case "R":
                         restart();
                         break;
+                    case '`':
                     case 'm':
                         toggleMenuVisibility(0, 0);
                         break;
