@@ -78,15 +78,15 @@ const Tessellations = {
         const effectiveCellHeight = cellDiameter | 0;
         const cellsX = (Math.floor(width / cellDiameter) - 1)|0;
         const cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
+        const shape = [
+            [0, 0],
+            [cellDiameter, 0],
+            [cellDiameter, effectiveCellHeight],
+            [0, effectiveCellHeight]
+        ];
 
         return {
             cellsX, cellsY,
-            shape: [
-                [0, 0],
-                [cellDiameter, 0],
-                [cellDiameter, effectiveCellHeight],
-                [0, effectiveCellHeight]
-            ],
             getPath: (x, y) => {
                 x = x | 0;
                 y = y | 0;
@@ -118,7 +118,6 @@ const Tessellations = {
         ];
         return {
             cellsX, cellsY,
-            shape,
             getPath: (x, y) => {
                 x = x|0;
                 y = y|0;
@@ -140,13 +139,14 @@ const Tessellations = {
         const effectiveCellHeight = (cellDiameter / Math.tan(Math.PI / 3)) | 0;
         const cellsX = (Math.floor(width / cellDiameter) - 1)|0;
         const cellsY = (Math.floor(height / effectiveCellHeight) - 1)|0;
+        const shape = [
+            [0, 0],
+            [cellDiameter, effectiveCellHeight],
+            [0, effectiveCellHeight * 2]
+        ];
+
         return {
             cellsX, cellsY,
-            shape: [
-                [0, 0],
-                [cellDiameter, effectiveCellHeight],
-                [0, effectiveCellHeight * 2]
-            ],
             getPath: (x, y) => {
                 x = x|0;
                 y = y|0;
