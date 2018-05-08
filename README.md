@@ -1,25 +1,32 @@
 # JSHexLife
-Reimplementation of my old pet project in JS
+Implementation of the The Game of Life in JS + CSS + SVG, without Canvas.
 
 Implemented:
-- hexagonal, triangular and square tesselations
-- flat finite or toroidal surface
+- Hexagonal, triangular and square tessellations
+- Flat finite or toroidal surface
 - Moore neighbourhood (Chebyshev distance = 1)
 - Von Neumann neighbourhood (Manhattan distance = 1)
-- hexagonal star, honeycomb and tripod neighbourhoods
-- neighbourhood selection
-- tessellation selection
+- Hexagonal star, honeycomb and tripod neighbourhoods
+- Neighbourhood selection
+- Tessellation selection
 - Conway's rules
-- click-editing
-- pausing
+- Pausing
+- Click-editing (not recommended to use in Chrome, as its time to handle click events is at least O(n) of cell count)
+- Hotkeys:
+  - p: pause
+  - m/backtick: menu
+  - R: restart
+  - Space: toggle cell under cursor
+  - Enter: force update
 
 Planned:
-- non-Conway rule configuration
-- rules with some randomness
-- cell ages
-- semi-transparent "paused" overlay
+- Saving/restoring rules
+- Non-Conway rule configuration
+- Semi-transparent "paused" overlay
+- Tessellation/neighbourhood dependence in the menu
 
 Considering:
-- Saving/restoring rules
-- Saving SVG
 - Saving/restoring grid with rules
+- Rules with some randomness
+- Cell ages
+- Saving SVG

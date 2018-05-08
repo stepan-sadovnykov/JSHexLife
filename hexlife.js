@@ -2,30 +2,17 @@
 
 const SVG_URI = "http://www.w3.org/2000/svg";
 
-const cellDiameter = 10;
-const density = .3;
 const generationDelay = 100;
 
-let cellType;
-
-let cellsX;
-let cellsY;
-let grid = [];
+let grid = null;
 let timer;
-let activeCell = null;
-
-const keep   = 0b0000000001100;
-const create = 0b0000000001000;
-
-document.onmousemove = function (e) {
-    activeCell = e.target.cell;
-};
+let paused = false;
 
 class Cell {
-    constructor(field, getPath, x, y) {
-        this.state = Math.random() < density;
+    constructor(field, getPath, x, y, state) {
+        this.state = state;
         this.sum = 0;
-        this.view = createCellView(field, getPath, x, y);
+        this.view = Cell.createCellView(field, getPath, x, y);
         this.view.onclick = () => this.toggleState();
         this.view.cell = this;
         this.neighbours = [];
@@ -35,9 +22,9 @@ class Cell {
         this.sum = this.neighbours.reduce((a, n) => a + n.state|0, 0);
     }
 
-    updateState() {
+    updateState(keep, spawn) {
         const sumMask = 1 << this.sum;
-        this.state = !!(this.state ? (sumMask & keep) : (sumMask & create));
+        this.state = !!(this.state ? (sumMask & keep) : (sumMask & spawn));
     }
 
     updateCss() {
@@ -48,21 +35,16 @@ class Cell {
         this.state = !this.state;
         this.updateCss();
     }
-}
 
-function createCellView(field, getPath, x, y) {
-    x = x|0;
-    y = y|0;
+    static createCellView(field, getPath, x, y) {
+        x = x|0;
+        y = y|0;
 
-    let item;
-    item = document.createElementNS(SVG_URI, "polygon");
-    item.setAttribute("points", getPath(x, y));
-    field.appendChild(item);
-    return item;
-}
-
-function mod(a, b) {
-    return ((a % b) + b) % b;
+        const item = document.createElementNS(SVG_URI, "polygon");
+        item.setAttribute("points", getPath(x, y));
+        field.appendChild(item);
+        return item;
+    }
 }
 
 const Tessellations = {
@@ -85,7 +67,8 @@ const Tessellations = {
                 return shape
                     .map(point => (point[0] + x * cellDiameter) + "," + (point[1] + y * effectiveCellHeight))
                     .join(" ");
-            }
+            },
+            isReflectedAt: () => false
         }
     },
     HEX: (width, height, cellDiameter) => {
@@ -114,7 +97,8 @@ const Tessellations = {
                 return shape
                     .map(point => (point[0] + offsetX) + "," + (point[1] + offsetY))
                     .join(" ");
-            }
+            },
+            isReflectedAt: () => false
         }
     },
     TRIANGLE: (width, height, cellDiameter) => {
@@ -139,7 +123,8 @@ const Tessellations = {
                 return shape
                     .map(point => (direction * point[0] + offsetX) + "," + (point[1] + offsetY))
                     .join(" ");
-            }
+            },
+            isReflectedAt: (x, y) => !!((x + y) % 2)
         };
     }
 };
@@ -186,13 +171,16 @@ const Neighbourhoods ={
     ]
 };
 
+function mod(a, b) {
+    return ((a % b) + b) % b;
+}
+
 const getNeighbours = function(grid, neighbourhood, wrap, x, y) {
     x = x|0;
     y = y|0;
     const result = [];
-    const isOddDiagonal = (x + y) % 2;
-    const isTriangular = cellType === Tessellations.TRIANGLE;
-    const reflected = isOddDiagonal && isTriangular;
+    const { tessellation: { cellsX, cellsY, isReflectedAt } } = grid;
+    const reflected = isReflectedAt(x, y);
     let i;
     let d;
     for (i = 0; i < neighbourhood.length; i++) {
@@ -208,31 +196,33 @@ const getNeighbours = function(grid, neighbourhood, wrap, x, y) {
     return result;
 };
 
-function initGrid(field, getPath) {
+function initGrid(field, tessellation, density) {
+    const { cellsX, cellsY, getPath } = tessellation;
     let x, y;
     console.log(`Init grid ${cellsX} by ${cellsY}: ${cellsX * cellsY} cells`);
+    const grid = [];
     for (x = 0; x < cellsX; x++) {
         grid[x] = [];
         for (y = 0; y < cellsY; y++) {
-            grid[x][y] = new Cell(field, getPath, x, y);
+            grid[x][y] = new Cell(field, getPath, x, y, Math.random() < density);
         }
     }
+    return grid;
 }
 
-function initNeighbours(neighbourhood, wrap) {
+function initNeighbours(grid, neighbourhood, wrap) {
     grid.forEach((r, x) => r.forEach((c, y) => c.neighbours = getNeighbours(grid, neighbourhood, wrap, x, y)));
 }
 
-let paused = false;
 function update() {
-    if (paused) return;
+    const { keep, spawn } = grid;
     grid.forEach(r => r.forEach(c => c.updateSum()));
-    grid.forEach(r => r.forEach(c => c.updateState()));
+    grid.forEach(r => r.forEach(c => c.updateState(keep, spawn)));
     grid.forEach(r => r.forEach(c => c.updateCss()));
 }
 
 function startTimer() {
-    timer = setInterval(update, generationDelay);
+    timer = setInterval(() => !paused && update(), generationDelay);
 }
 
 function togglePause() {
@@ -246,21 +236,21 @@ function stopTimer() {
 function destroyCells() {
     grid.forEach(r => r.forEach(c => {
         c.view.remove();
-        c.view.cell = undefined;
-        c.view.onclick = undefined;
-        c.neighbours = undefined
+        c.view.cell = null;
+        c.view.onclick = null;
+        c.neighbours = null;
     }));
 }
 
 function destroyGrid() {
     let x, y;
-    for (x = 0; x < cellsX; x++) {
-        for (y = 0; y < cellsY; y++) {
-            grid[x][y] = undefined;
+    for (x = 0; x < grid.length; x++) {
+        for (y = 0; y < grid[x].length; y++) {
+            grid[x][y] = null;
         }
-        grid[x] = undefined;
+        grid[x] = null;
     }
-    grid = [];
+    grid = null;
 }
 
 function destroy() {
@@ -271,32 +261,45 @@ function destroy() {
 
 function start(infoProvider) {
     const field = document.createElementNS(SVG_URI, "svg");
-    const height = infoProvider.getHeight();
-    const width = infoProvider.getWidth();
-    cellType = infoProvider.getCellType();
-    const neighbourhood = infoProvider.getNeighbourDisplacements();
-    const wrap = infoProvider.getEdgeWrapping();
-
-    let tessellation = cellType(width, height, cellDiameter);
-    let { getPath } = tessellation;
-
-    ({ cellsX, cellsY } = tessellation);
+    const { density, keep, spawn, height, width, neighbourhood, wrap, tessellation } = getInfo(infoProvider);
 
     field.setAttribute("height", height + "px");
     field.setAttribute("width", width + "px");
 
-    initGrid(field, getPath);
-    initNeighbours(neighbourhood, wrap);
+    grid = initGrid(field, tessellation, density);
+    grid.tessellation = tessellation;
+    grid.keep = keep;
+    grid.spawn = spawn;
+    initNeighbours(grid, neighbourhood, wrap);
     startTimer();
     return field;
 }
 
 function createEmptyInfoProvider() {
-    const infoProvider = {};
-    infoProvider.getHeight = function() {return 100;};
-    infoProvider.getWidth = function() {return 100;};
-    infoProvider.getEdgeWrapping = function() {return true;};
-    infoProvider.getCellType = function() {return Tessellations.HEX;};
-    infoProvider.getNeighbourDisplacements = function() {return Neighbourhoods.HEX;};
-    return infoProvider;
+    return {
+        getHeight: () => 100,
+        getWidth: () => 100,
+        getEdgeWrapping: () => true,
+        getTessellation: () => Tessellations.HEX,
+        getNeighbourhood: () => Neighbourhoods.HEX,
+        getKeepRule:  () => 0b0000000001100,
+        getSpawnRule: () => 0b0000000001000,
+        getDensity: () => .3,
+        getCellDiameter: () => 10,
+    };
+}
+
+function getInfo(infoProvider) {
+    const width = infoProvider.getWidth();
+    const height = infoProvider.getHeight();
+    return {
+        density: infoProvider.getDensity(),
+        keep: infoProvider.getKeepRule(),
+        spawn: infoProvider.getSpawnRule(),
+        height,
+        width,
+        neighbourhood: infoProvider.getNeighbourhood(),
+        wrap: infoProvider.getEdgeWrapping(),
+        tessellation: infoProvider.getTessellation()(width, height, infoProvider.getCellDiameter()),
+    };
 }
