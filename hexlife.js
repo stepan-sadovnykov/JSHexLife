@@ -7,8 +7,6 @@ const density = .3;
 const generationDelay = 100;
 
 let cellType;
-let displacements;
-let wrap;
 
 let cellsX;
 let cellsY;
@@ -34,13 +32,7 @@ class Cell {
     }
 
     updateSum() {
-        let sum = 0;
-        const neighbours = this.neighbours;
-        let i;
-        for (i = 0; i < (neighbours.length|0); i++) {
-            sum += neighbours[i].state|0;
-        }
-        this.sum = sum;
+        this.sum = this.neighbours.reduce((a, n) => a + n.state|0, 0);
     }
 
     updateState() {
@@ -90,14 +82,9 @@ const Tessellations = {
             getPath: (x, y) => {
                 x = x | 0;
                 y = y | 0;
-                let i;
-                let point;
-                let path = "";
-                for (i = 0; i < shape.length; i++) {
-                    point = shape[i];
-                    path += (point[0] + x * cellDiameter) + "," + (point[1] + y * effectiveCellHeight) + " ";
-                }
-                return path
+                return shape
+                    .map(point => (point[0] + x * cellDiameter) + "," + (point[1] + y * effectiveCellHeight))
+                    .join(" ");
             }
         }
     },
@@ -121,17 +108,12 @@ const Tessellations = {
             getPath: (x, y) => {
                 x = x|0;
                 y = y|0;
-                let i;
-                let point;
                 const effectiveX = ((x << 1) + y) % semiCellsX;
                 const offsetX = effectiveX * cellRadius;
                 const offsetY = y * effectiveCellHeight;
-                let path = "";
-                for (i = 0; i < shape.length; i++) {
-                    point = shape[i];
-                    path += (point[0] + offsetX) + "," + (point[1] + offsetY) + " ";
-                }
-                return path;
+                return shape
+                    .map(point => (point[0] + offsetX) + "," + (point[1] + offsetY))
+                    .join(" ");
             }
         }
     },
@@ -150,19 +132,13 @@ const Tessellations = {
             getPath: (x, y) => {
                 x = x|0;
                 y = y|0;
-                let i;
-                let point;
-                let path = "";
                 const isOddDiagonal = (x + y) % 2;
                 const direction = isOddDiagonal ? -1 : 1;
                 const offsetX = x * cellDiameter + (isOddDiagonal ? cellDiameter : 0);
                 const offsetY = y * effectiveCellHeight;
-                for (i = 0; i < shape.length; i++) {
-                    point = shape[i];
-                    const _x = direction * point[0] + offsetX;
-                    path += _x + "," + (point[1] + offsetY) + " ";
-                }
-                return path;
+                return shape
+                    .map(point => (direction * point[0] + offsetX) + "," + (point[1] + offsetY))
+                    .join(" ");
             }
         };
     }
@@ -210,7 +186,7 @@ const Neighbourhoods ={
     ]
 };
 
-const getNeighbours = function(grid, x, y) {
+const getNeighbours = function(grid, neighbourhood, wrap, x, y) {
     x = x|0;
     y = y|0;
     const result = [];
@@ -219,8 +195,8 @@ const getNeighbours = function(grid, x, y) {
     const reflected = isOddDiagonal && isTriangular;
     let i;
     let d;
-    for (i = 0; i < displacements.length; i++) {
-        d = displacements[i];
+    for (i = 0; i < neighbourhood.length; i++) {
+        d = neighbourhood[i];
         const unwrapped_x = x + (reflected ? -1 : 1) * d[0];
         const unwrapped_y = y + d[1];
         const _x = mod(unwrapped_x, cellsX);
@@ -243,34 +219,16 @@ function initGrid(field, getPath) {
     }
 }
 
-function initNeighbours() {
-    let x, y;
-    for (x = 0; x < cellsX; x++) {
-        for (y = 0; y < cellsY; y++) {
-            grid[x][y].neighbours = getNeighbours(grid, x, y);
-        }
-    }
+function initNeighbours(neighbourhood, wrap) {
+    grid.forEach((r, x) => r.forEach((c, y) => c.neighbours = getNeighbours(grid, neighbourhood, wrap, x, y)));
 }
 
 let paused = false;
 function update() {
     if (paused) return;
-    let x, y;
-    for (x = 0; x < cellsX; x++) {
-        for (y = 0; y < cellsY; y++) {
-            grid[x][y].updateSum();
-        }
-    }
-    for (x = 0; x < cellsX; x++) {
-        for (y = 0; y < cellsY; y++) {
-            grid[x][y].updateState();
-        }
-    }
-    for (x = 0; x < cellsX; x++) {
-        for (y = 0; y < cellsY; y++) {
-            grid[x][y].updateCss();
-        }
-    }
+    grid.forEach(r => r.forEach(c => c.updateSum()));
+    grid.forEach(r => r.forEach(c => c.updateState()));
+    grid.forEach(r => r.forEach(c => c.updateCss()));
 }
 
 function startTimer() {
@@ -285,20 +243,19 @@ function stopTimer() {
     clearInterval(timer);
 }
 
-function destroyNeighbours() {
-    let x, y;
-    for (x = 0; x < cellsX; x++) {
-        for (y = 0; y < cellsY; y++) {
-            grid[x][y].neighbours = undefined;
-        }
-    }
+function destroyCells() {
+    grid.forEach(r => r.forEach(c => {
+        c.view.remove();
+        c.view.cell = undefined;
+        c.view.onclick = undefined;
+        c.neighbours = undefined
+    }));
 }
 
 function destroyGrid() {
     let x, y;
     for (x = 0; x < cellsX; x++) {
         for (y = 0; y < cellsY; y++) {
-            grid[x][y].view.remove();
             grid[x][y] = undefined;
         }
         grid[x] = undefined;
@@ -308,17 +265,17 @@ function destroyGrid() {
 
 function destroy() {
     stopTimer();
-    destroyNeighbours();
+    destroyCells();
     destroyGrid();
 }
 
 function start(infoProvider) {
-    field = document.createElementNS(SVG_URI, "svg");
+    const field = document.createElementNS(SVG_URI, "svg");
     const height = infoProvider.getHeight();
     const width = infoProvider.getWidth();
     cellType = infoProvider.getCellType();
-    displacements = infoProvider.getNeighbourDisplacements();
-    wrap = infoProvider.getEdgeWrapping();
+    const neighbourhood = infoProvider.getNeighbourDisplacements();
+    const wrap = infoProvider.getEdgeWrapping();
 
     let tessellation = cellType(width, height, cellDiameter);
     let { getPath } = tessellation;
@@ -329,7 +286,7 @@ function start(infoProvider) {
     field.setAttribute("width", width + "px");
 
     initGrid(field, getPath);
-    initNeighbours();
+    initNeighbours(neighbourhood, wrap);
     startTimer();
     return field;
 }
