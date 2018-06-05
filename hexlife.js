@@ -47,7 +47,7 @@ class Cell {
     }
 }
 
-const Tessellations = {
+export const Tessellations = {
     RECT: (width, height, cellDiameter) => {
         const effectiveCellHeight = cellDiameter | 0;
         const cellsX = (Math.floor(width / cellDiameter) - 1)|0;
@@ -129,7 +129,7 @@ const Tessellations = {
     }
 };
 
-const Neighbourhoods ={
+export const Neighbourhoods ={
     RECT_NEUMANN: [
                       [ 0, -1],
             [-1,  0],           [ 1,  0],
@@ -199,7 +199,7 @@ const getNeighbours = function(grid, neighbourhood, wrap, x, y) {
 function initGrid(field, tessellation, density) {
     const { cellsX, cellsY, getPath } = tessellation;
     let x, y;
-    console.log(`Init grid ${cellsX} by ${cellsY}: ${cellsX * cellsY} cells`);
+    console.log(`Init grid ${cellsX} by ${cellsY}: ${cellsX * cellsY} cells`); // eslint-disable-line no-console
     const grid = [];
     for (x = 0; x < cellsX; x++) {
         grid[x] = [];
@@ -214,7 +214,7 @@ function initNeighbours(grid, neighbourhood, wrap) {
     grid.forEach((r, x) => r.forEach((c, y) => c.neighbours = getNeighbours(grid, neighbourhood, wrap, x, y)));
 }
 
-function update() {
+export function update() {
     const { keep, spawn } = grid;
     grid.forEach(r => r.forEach(c => c.updateSum()));
     grid.forEach(r => r.forEach(c => c.updateState(keep, spawn)));
@@ -225,7 +225,7 @@ function startTimer() {
     timer = setInterval(() => !paused && update(), generationDelay);
 }
 
-function togglePause() {
+export function togglePause() {
     paused = !paused;
 }
 
@@ -253,13 +253,13 @@ function destroyGrid() {
     grid = null;
 }
 
-function destroy() {
+export function destroy() {
     stopTimer();
     destroyCells();
     destroyGrid();
 }
 
-function start(infoProvider) {
+export function start(infoProvider) {
     const field = document.createElementNS(SVG_URI, "svg");
     const { density, keep, spawn, height, width, neighbourhood, wrap, tessellation } = getInfo(infoProvider);
 
@@ -275,7 +275,7 @@ function start(infoProvider) {
     return field;
 }
 
-function createEmptyInfoProvider() {
+export function createEmptyInfoProvider() {
     return {
         getHeight: () => 100,
         getWidth: () => 100,
