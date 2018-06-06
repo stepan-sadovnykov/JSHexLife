@@ -4,7 +4,13 @@
     "browser": true
   },
   "parserOptions": {
-    "ecmaVersion": 6,
+    "ecmaVersion": 2017,
+    "ecmaFeatures": {
+      "destructuring": true,
+      "spread": true,
+      "restParams": true,
+      "experimentalObjectRestSpread": true
+    },
     "sourceType": "module"
   }
 }

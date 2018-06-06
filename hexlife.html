@@ -41,6 +41,9 @@
             display: block;
             margin-top: 5px;
         }
+        #menu > label > select {
+            display: block;
+        }
     </style>
     <script type="module">
         import { onLoad } from './index.js';
@@ -48,25 +51,5 @@
     </script>
 </head>
 <body onload="onLoad();">
-    <div id="menu" style="display: none;" onclick="event.stopPropagation();">
-        <button onclick="hideMenu(); restart();">Restart</button>
-        <label for="tessellation">Tessellation:</label>
-        <select id="tessellation">
-            <option value="RECT">Rectangular</option>
-            <option value="HEX" selected="selected">Hexagonal</option>
-            <option value="TRIANGLE">Triangular</option>
-        </select>
-        <label for="neighbourhood">Neighbourhood:</label>
-        <select id="neighbourhood">
-            <option value="TRI_NEUMANN">Triangular von Neumann</option>
-            <option value="TRI_MOORE">Triangular Moore</option>
-            <option value="RECT_NEUMANN">Rectangular von Neumann</option>
-            <option value="RECT_MOORE">Rectangular Moore</option>
-            <option value="HEX" selected="selected">Hexagonal honeycomb</option>
-            <option value="HEX_TRIPOD">Hexagonal tripod</option>
-            <option value="HEX_STAR">Hexagonal star</option>
-        </select>
-        <div><label for="wrap">Edge wrap:</label><input id="wrap" type="checkbox" checked="checked" /></div>
-    </div>
 </body>
 </html>

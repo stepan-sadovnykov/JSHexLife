@@ -2,11 +2,39 @@ import {
     createEmptyInfoProvider, destroy, start, togglePause, update,
     Neighbourhoods, Tessellations
 } from './hexlife.js';
-let menuStyle;
+
 let field;
 let body;
 let activeCell = null;
+let state = {
+    tessellation: 'HEX',
+    neighbourhood: 'HEX',
+    wrap: true,
+};
 const infoProvider = createEmptyInfoProvider();
+
+function e(tag, attrs, children) {
+    const element = document.createElement(tag);
+    for (const attr of Object.entries(attrs)) {
+        const [name, value] = attr;
+        if (name.startsWith('on')) {
+            element[name] = value;
+        } else {
+            element.setAttribute(name, value);
+        }
+    }
+    if (Array.isArray(children)) {
+        for (const child of children) {
+            element.appendChild(Node.prototype.isPrototypeOf(child)
+                ? child
+                : document.createTextNode(child)
+            );
+        }
+    } else {
+        element.appendChild(document.createTextNode(children));
+    }
+    return element;
+}
 
 function deepFreeze(object) {
     if (null == object) {
@@ -22,6 +50,7 @@ function deepFreeze(object) {
 }
 
 const ALL_CAPS = /^[A-Z]+(_[A-Z]+)*$/;
+
 /*
 * Clones object deeply, excluding all-caps fields - they are copied by ref
 * */
@@ -38,11 +67,8 @@ function deepClone(object) {
 
     return Object.freeze(object);
 }
+
 export function onLoad() {
-    menuStyle = document.getElementById("menu").style;
-    const neighbourhood = document.getElementById("neighbourhood");
-    const tessellation = document.getElementById("tessellation");
-    const wrap = document.getElementById("wrap");
     body = document.getElementsByTagName("body")[0];
 
     document.onmousemove = (e) => {
@@ -74,25 +100,20 @@ export function onLoad() {
         toggleMenuVisibility(event.clientX, event.clientY);
         return false;
     });
-    document.onclick = function() {hideMenu();};
-
-    for (let option of neighbourhood.options) {
-        option.displacements = Neighbourhoods[option.value];
-    }
-
-    for (let option of tessellation.options) {
-        option.tesselation = Tessellations[option.value];
-    }
+    document.onclick = function () {
+        hideMenu();
+    };
 
     infoProvider.getHeight = () => window.innerHeight;
     infoProvider.getWidth = () => window.innerWidth;
-    infoProvider.getTessellation = () => tessellation.selectedOptions[0].tesselation;
-    infoProvider.getNeighbourhood = () => neighbourhood.selectedOptions[0].displacements;
-    infoProvider.getEdgeWrapping = () => wrap.checked;
+    infoProvider.getTessellation = () => Tessellations[state.tessellation];
+    infoProvider.getNeighbourhood = () => Neighbourhoods[state.neighbourhood];
+    infoProvider.getEdgeWrapping = () => state.wrap;
 
     field = start(infoProvider);
     body.appendChild(field);
 }
+
 function restart() {
     field.parentNode.removeChild(field);
     destroy();
@@ -100,18 +121,64 @@ function restart() {
     field = start(infoProvider);
     body.appendChild(field);
 }
-function toggleMenuVisibility(x, y) {
-    if (menuStyle.display === "none") {
-        renderMenu(x, y);
-    } else {
+
+function toggleMenuVisibility() {
+    if (document.getElementById('menu')) {
         hideMenu();
+    } else {
+        renderMenu();
     }
 }
-function renderMenu(x, y) {
-    menuStyle.left = x + "px";
-    menuStyle.top = y + "px";
-    menuStyle.display = "block";
+
+function renderDropdown(label, name, value, values) {
+    return e('label', {}, [
+        label,
+        e('select', {
+            name,
+            onchange: ({target: {name, value}}) => state[name] = value
+        }, values.map(i => e('option', {
+            value: i.value,
+            ...(i.value === value ? {selected: 'selected'} : {})
+        }, i.text)))
+    ])
 }
+
+function renderMenu() {
+    document.body.appendChild(
+        e('div', {id: 'menu', onclick: e => e.stopPropagation()}, [
+                e('button', {
+                    onclick() {
+                        hideMenu();
+                        restart();
+                    }
+                }, 'Restart'),
+                renderDropdown('Tessellation:', 'tessellation', state.tessellation, [
+                    {value: 'RECT', text: 'Rectangular'},
+                    {value: 'HEX', text: 'Hexagonal'},
+                    {value: 'TRIANGLE', text: 'Triangular'},
+                ]),
+                renderDropdown('Neighbourhood:', 'neighbourhood', state.neighbourhood, [
+                    {value: 'TRI_NEUMANN', text: 'Triangular von Neumann'},
+                    {value: 'TRI_MOORE', text: 'Triangular Moore'},
+                    {value: 'RECT_NEUMANN', text: 'Rectangular von Neumann'},
+                    {value: 'RECT_MOORE', text: 'Rectangular Moore'},
+                    {value: 'HEX', text: 'Hexagonal honeycomb'},
+                    {value: 'HEX_TRIPOD', text: 'Hexagonal tripod'},
+                    {value: 'HEX_STAR', text: 'Hexagonal star'},
+                ]),
+                e('label', {}, [
+                    'Edge wrap:',
+                    e('input', {
+                        name: 'wrap', type: 'checkbox',
+                        onchange: ({target: {name, checked}}) => state[name] = checked,
+                        ...(state.wrap ? {checked: 'checked'} : {})
+                    }),
+                ]),
+            ],
+        )
+    );
+}
+
 function hideMenu() {
-    menuStyle.display = "none";
+    document.getElementById('menu').remove();
 }
