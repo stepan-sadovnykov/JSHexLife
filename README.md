@@ -1,4 +1,4 @@
-# JSHexLife
+# [JSHexLife](http://stepan-sadovnykov.github.io/JSHexLife/hexlife.html)
 Implementation of the The Game of Life in JS + CSS + SVG, without Canvas.
 
 Implemented:
@@ -11,8 +11,8 @@ Implemented:
 - Tessellation selection
 - Conway's rules
 - Pausing
-- Click-editing (not recommended to use in Chrome, as its time to handle click events is at least O(n) of cell count)
-- Hotkeys:
+- Click-editing (*not recommended to use in Chrome, as its time to handle click events is at least O(n) of cell count*)
+- **Hotkeys**:
   - p: pause
   - m/backtick: menu
   - R: restart
