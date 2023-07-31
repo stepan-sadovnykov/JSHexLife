@@ -5,7 +5,6 @@ const SVG_URI = "http://www.w3.org/2000/svg";
 const generationDelay = 100;
 
 let grid = null;
-let timer;
 let paused = false;
 
 class Cell {
@@ -221,16 +220,18 @@ function update() {
     grid.forEach(r => r.forEach(c => c.updateCss()));
 }
 
-function startTimer() {
-    timer = setInterval(() => !paused && update(), generationDelay);
+let oldT = 0;
+function render(t) {
+    let dt = t - oldT;
+    if (dt > generationDelay && !paused) {
+        oldT = t;
+        update();
+    }
+    requestAnimationFrame(render);
 }
 
 function togglePause() {
     paused = !paused;
-}
-
-function stopTimer() {
-    clearInterval(timer);
 }
 
 function destroyCells() {
@@ -254,7 +255,6 @@ function destroyGrid() {
 }
 
 function destroy() {
-    stopTimer();
     destroyCells();
     destroyGrid();
 }
@@ -271,7 +271,7 @@ function start(infoProvider) {
     grid.keep = keep;
     grid.spawn = spawn;
     initNeighbours(grid, neighbourhood, wrap);
-    startTimer();
+    requestAnimationFrame(render);
     return field;
 }
 
